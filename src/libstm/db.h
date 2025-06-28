@@ -15,6 +15,7 @@ CREATE TABLE [REMOTES] (                                                \
 "
 
 int libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err);
+int libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
 
 /* sqlcipher functions */
 extern int sqlite3_key_v2(

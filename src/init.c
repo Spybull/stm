@@ -1,4 +1,5 @@
 #include "init.h"
+#include "stm.h"
 #include <argp.h>
 
 #include "libstm/init.h"
@@ -16,7 +17,6 @@ stm_command_init(stm_glob_args *glob_args stm_unused,
 {
     int rc = 0;
     argp_parse(&run_argp, argc, argv, 0, NULL, NULL);
-
 
     rc = stm_path_exists(DEFAULT_STM_DB_NAME, err);
     if (stm_unlikely(rc < 0))

@@ -19,7 +19,11 @@ endif()
 message(STATUS "Current build type: ${CMAKE_BUILD_TYPE}")
 
 add_subdirectory(src/libstm)
-set(SRCS src/init.c src/stm.c)
+set(SRCS
+    src/cmd.c
+    src/init.c
+    src/add.c
+    src/stm.c)
 
 target_link_libraries(stm PRIVATE libstm)
 target_sources(stm PRIVATE ${SRCS})

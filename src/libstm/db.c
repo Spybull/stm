@@ -30,3 +30,13 @@ libstm_db_init(const char *filename, const char *pKey, int nKey, const char *sch
     sqlite3_close_v2(pdb);
     return 0;
 }
+
+int
+libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err)
+{
+    int rc;
+    rc = sqlite3_key_v2(pdb, "stm.db", pKey, nKey);
+    if (rc != SQLITE_OK)
+        return stm_make_error(err, 0, "failed to decrypt database");
+    return 0;
+}
