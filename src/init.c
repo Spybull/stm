@@ -9,14 +9,14 @@
 
 static char doc[] = "STM init";
 static char args_doc[] = "init";
-static struct argp run_argp = { NULL, NULL, args_doc, doc, NULL, NULL, NULL };
+static struct argp argp = { NULL, NULL, args_doc, doc, NULL, NULL, NULL };
 
 int
 stm_command_init(stm_glob_args *glob_args stm_unused,
                 int argc, char **argv, libstm_error_t *err)
 {
     int rc = 0;
-    argp_parse(&run_argp, argc, argv, 0, NULL, NULL);
+    argp_parse(&argp, argc, argv, 0, NULL, NULL);
 
     rc = stm_path_exists(DEFAULT_STM_DB_NAME, err);
     if (stm_unlikely(rc < 0))

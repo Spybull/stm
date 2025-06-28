@@ -2,12 +2,13 @@
 #include <argp.h>
 
 #include "libstm/utils.h"
+#include "subcommands/server.h"
 
 static stm_glob_args arguments;
 
 enum { CMD_SERVER = 1001 };
 struct commands_s sub_cmds[] = {
-    { CMD_SERVER, "server", implementation_stub },
+    { CMD_SERVER, "server", stm_subcommand_server },
     { 0, }
 };
 static error_t
@@ -44,7 +45,8 @@ stm_command_add(stm_glob_args *glob_args stm_unused, int argc, char **argv, libs
         libstm_fail_with_error(0, "unknown subcommand `%s`", argv[farg]);
 
     rc = curr_cmd->handler(&arguments, argc - farg, argv + farg, err);
-    if (rc < 0)
-        libstm_fail_with_error(0, "add error");
+    if (rc < 0 && (*err))
+        libstm_fail_with_error((*err)->status, "%s", (*err)->msg);
+
     return 0;
 }

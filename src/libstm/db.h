@@ -30,4 +30,12 @@ extern int sqlite3_rekey_v2(
     const void *pKey, int nKey /* The new key */
 );
 
+struct libstm_server_s {
+	char *name;
+	const char *ip;
+	unsigned short port;
+	char *description;
+};
+typedef struct libstm_server_s libstm_server;
+
 #endif

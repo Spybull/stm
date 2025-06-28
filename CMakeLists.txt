@@ -13,6 +13,8 @@ target_compile_options(stm PRIVATE $<$<CONFIG:Debug>:-g -O0>)
 target_compile_options(stm PRIVATE $<$<CONFIG:Release>:-O3>)
 add_definitions(-D_GNU_SOURCE -D_XOPEN_SOURCE)
 
+target_include_directories(stm PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
 endif()
@@ -23,6 +25,7 @@ set(SRCS
     src/cmd.c
     src/init.c
     src/add.c
+    src/subcommands/server.c
     src/stm.c)
 
 target_link_libraries(stm PRIVATE libstm)
