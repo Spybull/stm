@@ -6,6 +6,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <errno.h>
+#include <ctype.h>
 
 #ifndef TEMP_FAILURE_RETRY
 #  define TEMP_FAILURE_RETRY(expression)      \
@@ -71,5 +73,26 @@ xmalloc (size_t size)
     stm_oom();
   return rc;
 }
+
+__attribute__ ((malloc)) static inline char *
+xstrdup (const char *s) {
+  char *_s = strdup(s);
+  if (_s == NULL)
+    stm_oom();
+  return _s;
+}
+
+__attribute__ ((malloc)) static inline char *
+xstrdup0 (char *s)
+{
+  char *_s = strdup(s);
+  memset(s, 0, strlen(s));
+  if (_s == NULL)
+    stm_oom();
+
+  return _s;
+}
+
+void trim(char *line);
 
 #endif

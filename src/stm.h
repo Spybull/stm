@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include "libstm/error.h"
 
+#define DEFAULT_STM_DIR_NAME ".stm"
+#define DEFAULT_STM_DB_NAME "stm.db"
+
 struct stm_global_arguments {
     int argc;
     char **argv;

@@ -9,7 +9,14 @@ set(STM_VERSION_STRING "${STM_VERSION_MAJOR}.${STM_VERSION_MINOR}.${STM_VERSION_
 
 add_executable(stm)
 target_compile_options(stm PRIVATE -Wall -Wextra -Werror -pedantic)
+target_compile_options(stm PRIVATE $<$<CONFIG:Debug>:-g -O0>)
+target_compile_options(stm PRIVATE $<$<CONFIG:Release>:-O3>)
 add_definitions(-D_GNU_SOURCE -D_XOPEN_SOURCE)
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+message(STATUS "Current build type: ${CMAKE_BUILD_TYPE}")
 
 add_subdirectory(src/libstm)
 set(SRCS src/init.c src/stm.c)

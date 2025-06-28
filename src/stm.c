@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         libstm_fail_with_error(0, "unknown command `%s`", argv[farg]);
 
     rc = curr_cmd->handler(&arguments, argc - farg, argv + farg, &err);
-    if (rc < 0)
-        libstm_fail_with_error(rc, "something went wrong");
+    if (rc < 0 && err)
+        libstm_fail_with_error(err->status, "%s", err->msg);
     return 0;
 }
