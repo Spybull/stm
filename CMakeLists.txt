@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.30.8)
 project(stm C)
+include(GNUInstallDirs)
 
 set(CMAKE_C_STANDARD 23)
 set(STM_VERSION_MAJOR 1)
@@ -30,3 +31,7 @@ set(SRCS
 
 target_link_libraries(stm PRIVATE libstm)
 target_sources(stm PRIVATE ${SRCS})
+
+install(TARGETS stm
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
