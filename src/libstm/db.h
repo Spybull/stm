@@ -14,8 +14,18 @@ CREATE TABLE [REMOTES] (                                                \
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP);                    \
 "
 
+struct libstm_server_s {
+	char *name;
+	const char *ip;
+	unsigned short port;
+	char *description;
+};
+typedef struct libstm_server_s libstm_server;
+
+sqlite3 *libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err);
 int libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err);
 int libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
+int libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
 
 /* sqlcipher functions */
 extern int sqlite3_key_v2(
@@ -30,12 +40,6 @@ extern int sqlite3_rekey_v2(
     const void *pKey, int nKey /* The new key */
 );
 
-struct libstm_server_s {
-	char *name;
-	const char *ip;
-	unsigned short port;
-	char *description;
-};
-typedef struct libstm_server_s libstm_server;
+
 
 #endif

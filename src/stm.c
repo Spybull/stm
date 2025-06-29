@@ -4,6 +4,9 @@
 
 #include "libstm/error.h"
 #include "libstm/utils.h"
+#include "libstm/sysuser.h"
+#include "libstm/file.h"
+#include "libstm/config.h"
 
 /* STM HELPER FUNCTIONS */
 #include "cmd.h"
@@ -12,6 +15,7 @@
 #include "init.h"
 #include "add.h"
 
+const char *argp_program_bug_address = "https://github.com/Spybull/stm/issues";
 static stm_glob_args arguments;
 enum { CMD_INIT = 1001, CMD_ADD };
 struct commands_s cmds[] = {
@@ -41,6 +45,24 @@ static char doc[] = "\nCOMMANDS:\n"
 
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
+// static int
+// stm_init_context(libstm_error_t *err)
+// {
+//     int rc;
+//     cleanup_free char *pwd = NULL;
+//     pwd = realpath(".", NULL);
+
+//     user_info_t *current_user = libstm_setup_userinfo();
+
+//     // rc = libstm_path_exists(STM_WORKDIR_PATH, err);
+//     // if (rc < 0)
+//     //     return rc;
+//     // if (rc == 0)
+        
+//     // else 
+
+// }
+
 int main(int argc, char **argv)
 {
     int rc = 0, farg = 0;
@@ -54,6 +76,10 @@ int main(int argc, char **argv)
     curr_cmd = stm_get_command(argv[farg], cmds);
     if (!curr_cmd)
         libstm_fail_with_error(0, "unknown command `%s`", argv[farg]);
+
+    if (chdir(STM_WORKDIR_PATH) < 0)
+        libstm_fail_with_error(errno, "failed to change directory `%s` ",
+                              STM_WORKDIR_PATH);
 
     rc = curr_cmd->handler(&arguments, argc - farg, argv + farg, &err);
     if (rc < 0 && err)

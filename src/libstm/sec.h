@@ -2,6 +2,6 @@
 #define STM_SEC_H
 #include "error.h"
 
-char *stm_ask_password(const char *prompt, int verify, libstm_error_t *err);
-
+char *libstm_ask_password(const char *prompt, int verify, libstm_error_t *err);
+int libstm_auth(const char *prompt, char *pwout, libstm_error_t *err);
 #endif

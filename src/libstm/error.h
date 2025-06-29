@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#define STM_GENERIC_ERROR -1
+
 struct libstm_error_s {
   int status;
   char *msg;

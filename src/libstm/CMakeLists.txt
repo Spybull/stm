@@ -7,6 +7,7 @@ set(SRCS
     db.c
     file.c
     sec.c
+    sysuser.c
     utils.c
     error.c)
 
