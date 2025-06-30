@@ -21,9 +21,5 @@ libstm_init(libstm_error_t *err)
     if (passwd == NULL)
         return STM_GENERIC_ERROR;
 
-    rc = libstm_create_dir(STM_WORKDIR_PATH, 0750, err);
-    if (stm_unlikely(rc < 0))
-        return rc;
-    
     return libstm_db_init(STM_DATABASE_NAME, passwd, strlen(passwd), NULL, err);
 }

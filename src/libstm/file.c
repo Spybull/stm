@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/file.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 int
 libstm_create_file(const char *path, libstm_error_t *err) {
@@ -75,5 +76,23 @@ libstm_create_dir(const char *path, mode_t mode, libstm_error_t *err) {
         return stm_make_error(err, errno, "failed to create directory `%s`", path);
     }
 
+    return 0;
+}
+
+int
+safe_path(char *buf, size_t size, const char *fmt, ...)
+{
+    va_list args_list;
+    va_start(args_list, fmt);
+
+    int n = vsnprintf(NULL, 0, fmt, args_list);
+    va_end(args_list);
+
+    if (n < 0 || (size_t)n >= size)
+        return -1;
+
+    va_start(args_list, fmt);
+    vsnprintf(buf, size, fmt, args_list);
+    va_end(args_list);
     return 0;
 }

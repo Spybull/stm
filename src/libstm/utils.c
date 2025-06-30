@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include <linux/limits.h>
 
 void
 trim(char *line)
@@ -23,4 +24,24 @@ trim(char *line)
         q--;
 
     *q = '\0';
+}
+
+int
+libstm_get_workdir(char *out, libstm_error_t *err)
+{
+    int rc;
+    cleanup_free char *home_path = NULL;
+
+    const char *env = getenv("HOME");
+    if (stm_likely(env != NULL)) {
+        home_path = xstrdup(env);
+    } else {
+        home_path = getcwd(NULL, 0);
+        if (stm_unlikely(home_path == NULL))
+            return stm_make_error(err, errno, "failed to getcwd");
+    }
+
+    snprintf(out, PATH_MAX, "%s", home_path);
+
+    return 0;
 }

@@ -23,7 +23,7 @@ stm_command_init(stm_glob_args *glob_args stm_unused,
     if (stm_unlikely(rc < 0))
         return rc;
     else if (rc == 1)
-        libstm_fail_with_error(0, "database `%s` already exists", STM_DATABASE_NAME);
+        return stm_make_error(err, 0, "nothing todo, already initialized");
 
     return libstm_init(err);
 }
