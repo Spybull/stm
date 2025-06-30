@@ -2,7 +2,27 @@
 #include "file.h"
 #include "utils.h"
 #include "queries.h"
+#include "config.h"
 #include <stdbool.h>
+
+static int
+make_dummy_query(sqlite3 *pdb, libstm_error_t *err) {
+    
+    int rc = 0;
+    cleanup_free char *pwd = NULL;
+
+    pwd = getcwd(NULL, 0);
+    rc = sqlite3_exec(pdb, "SELECT count(*) FROM sqlite_master;", NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        if (stm_likely(rc == SQLITE_NOTADB))
+            return stm_make_error(err, SQLITE_NOTADB, "failed to decrypt database file `%s/%s`",
+                                   pwd, STM_DATABASE_NAME);
+
+        return stm_make_error(err, 0, "failed to query database: `%s`", sqlite3_errmsg(pdb));
+    }
+
+    return 0;
+}
 
 static inline int
 bind_text_by_str(sqlite3_stmt *stmt, const char *text, const char *zName, bool is_static)
@@ -82,9 +102,10 @@ int
 libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err)
 {
     int rc;
-    rc = sqlite3_key_v2(pdb, "stm.db", pKey, nKey);
-    if (rc != SQLITE_OK)
-        return stm_make_error(err, 0, "failed to decrypt database");
+    sqlite3_key_v2(pdb, NULL, pKey, nKey);    
+    rc = make_dummy_query(pdb, err);
+    if (rc < 0)
+        return rc;
     return 0;
 }
 

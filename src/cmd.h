@@ -1,10 +1,13 @@
 #ifndef LIBSTM_CMD_H
 #define LIBSTM_CMD_H
+
 #include "libstm/error.h"
+#include "libstm/db.h"
 
 struct stm_global_arguments {
     int argc;
     char **argv;
+    sqlite3 *pdb;
 };
 typedef struct stm_global_arguments stm_glob_args;
 

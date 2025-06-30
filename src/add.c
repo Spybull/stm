@@ -2,9 +2,11 @@
 #include <argp.h>
 
 #include "libstm/utils.h"
+#include "libstm/db.h"
+#include "libstm/sec.h"
 #include "subcommands/server.h"
 
-static stm_glob_args arguments;
+static stm_glob_args add_args;
 
 enum { CMD_SERVER = 1001 };
 struct commands_s sub_cmds[] = {
@@ -36,15 +38,22 @@ stm_command_add(stm_glob_args *glob_args stm_unused, int argc, char **argv, libs
     int rc = 0, farg = 0;
     struct commands_s *curr_cmd;
 
-    arguments.argc = argc;
-    arguments.argv = argv;
+    add_args.argc = argc;
+    add_args.argv = argv;
 
-    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, &arguments);
+    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, &add_args);
     curr_cmd = stm_get_command(argv[farg], sub_cmds);
     if (!curr_cmd)
         libstm_fail_with_error(0, "unknown subcommand `%s`", argv[farg]);
 
-    rc = curr_cmd->handler(&arguments, argc - farg, argv + farg, err);
+
+    add_args.pdb = libstm_db_auth(NULL, NULL, err);
+    if (!add_args.pdb)
+        return STM_GENERIC_ERROR;
+
+    rc = curr_cmd->handler(&add_args, argc - farg, argv + farg, err);
+    sqlite3_close_v2(add_args.pdb);
+
     if (rc < 0 && (*err))
         libstm_fail_with_error((*err)->status, "%s", (*err)->msg);
 

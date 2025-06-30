@@ -47,17 +47,11 @@ static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL 
 int
 stm_subcommand_server(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
 {
-    int rc = 0;
     libstm_server server = {0};
     argp_parse(&argp, argc, argv, 0, NULL, &server);
 
     if (!server.ip || !server.port)
         return stm_make_error(err, 0, "not all required parameters are specified");
 
-    rc = libstm_auth(NULL, NULL, err);
-    if (rc < 0)
-        return rc;
-    
-    printf("Result: %s -> `%s:%d`\n", server.name, server.ip, server.port);
-    return 0;
+    return libstm_db_server_add(glob_args->pdb, &server, err);
 }

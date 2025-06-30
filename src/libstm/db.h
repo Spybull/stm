@@ -5,7 +5,7 @@
 
 #define CREATE_DRYDB                                                    \
 "                                                                       \
-CREATE TABLE [REMOTES] (                                                \
+CREATE TABLE [SERVERS] (                                                \
     id          INTEGER PRIMARY KEY,                                    \
     name        TEXT NOT NULL CHECK (name != ''),                       \
     ip          TEXT NOT NULL,                                          \

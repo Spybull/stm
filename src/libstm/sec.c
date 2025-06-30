@@ -1,6 +1,7 @@
 #include "sec.h"
 #include "utils.h"
 #include "db.h"
+#include "config.h"
 
 #include <stdbool.h>
 #include <openssl/evp.h>
@@ -27,8 +28,8 @@ libstm_ask_password(const char *prompt, int verify, libstm_error_t *err)
     return xstrdup0(passwd);
 }
 
-int
-libstm_auth(const char *prompt, char *pwout, libstm_error_t *err)
+sqlite3 *
+libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
 {
     int rc = 0;
     int attempts = 3;
@@ -37,38 +38,38 @@ libstm_auth(const char *prompt, char *pwout, libstm_error_t *err)
     if (!prompt || !strlen(prompt))
         prompt = "Enter decryption key: ";
     
-    pdb = libstm_db_open("stm.db", NULL, err);
-    if (!pdb)
-        return STM_GENERIC_ERROR;
+    pdb = libstm_db_open(STM_DATABASE_NAME, NULL, err);
+    if (pdb == NULL)
+        return NULL;
 
     do
     {
         if (!attempts) {
             sqlite3_close_v2(pdb);
-            return stm_make_error(err, 0, "maximum attempts remaining (failed password)");
+            stm_make_error(err, 0, "maximum attempts remaining (failed password)");
+            return NULL;
         }
 
         char *passwd = libstm_ask_password(prompt, 0, err);
         if (!passwd)
-            return STM_GENERIC_ERROR;
+            return NULL;
 
         rc = libstm_db_decrypt(pdb, passwd, strlen(passwd), err);
-
         if (rc == -(SQLITE_NOTADB + 1)) {
             fprintf(stderr, "wrong password, try again"
-                            "(attempts remaining: %d)", --attempts);
+                            "(attempts remaining: %d)\n", --attempts);
         } else {
             if (pwout != NULL)
                 memcpy(pwout, passwd, strlen(passwd));
 
             memset(passwd, '\0', strlen(passwd));
             free(passwd);
-            return rc;
+            return pdb;
         }
 
         memset(passwd, '\0', strlen(passwd));
         free(passwd);
     } while(true);
 
-    return rc;
+    return pdb;
 }
