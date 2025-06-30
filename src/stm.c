@@ -15,13 +15,15 @@
 /* STM COMMANDS IMPL */
 #include "init.h"
 #include "add.h"
+#include "list.h"
 
 const char *argp_program_bug_address = "https://github.com/Spybull/stm/issues";
 static stm_glob_args arguments;
-enum { CMD_INIT = 1001, CMD_ADD };
+enum { CMD_INIT = 1001, CMD_ADD, CMD_LIST };
 struct commands_s cmds[] = {
-    { CMD_INIT, "init", stm_command_init},
-    { CMD_ADD,  "add" , stm_command_add },
+    { CMD_INIT, "init", stm_command_init },
+    { CMD_ADD,  "add" , stm_command_add  },
+    { CMD_LIST, "list", stm_command_list },
     { 0, }
 };
 
@@ -42,7 +44,8 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
 static char args_doc[] = "COMMAND [OPTION...]";
 static char doc[] = "\nCOMMANDS:\n"
                     "\tinit - initialize database\n"
-                    "\tadd  - add something\n";
+                    "\tlist - list records\n"
+                    "\tadd  - add record\n";
 
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
 

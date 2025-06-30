@@ -26,6 +26,7 @@ set(SRCS
     src/cmd.c
     src/init.c
     src/add.c
+    src/list.c
     src/subcommands/server.c
     src/stm.c)
 
