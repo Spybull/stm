@@ -28,6 +28,7 @@ set(SRCS
     src/server.c
     src/subcommands/add.c
     src/subcommands/list.c
+    src/subcommands/ssh.c
     src/stm.c)
 
 target_link_libraries(stm PRIVATE libstm)

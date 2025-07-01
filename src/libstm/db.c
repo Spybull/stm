@@ -122,6 +122,7 @@ add_server(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *er
     bind_int_by_str(stmt,  srv->port,        ":port");
     bind_text_by_str(stmt, srv->name,        ":name",        true);
     bind_text_by_str(stmt, srv->ip,          ":ip",          true);
+    bind_text_by_str(stmt, srv->password,    ":password",    true);
     bind_text_by_str(stmt, srv->description, ":description", true);
     
     rc = sqlite3_step(stmt);

@@ -2,7 +2,7 @@
 #define QUERIES_H
 
 const char ADD_SERVER[] =
-    "INSERT INTO SERVERS (name, ip, port, description) VALUES "
-    "(:name, :ip, :port, :description);";
+    "INSERT INTO SERVERS (name, ip, port, password, description) VALUES "
+    "(:name, :ip, :port, :password, :description);";
 
 #endif

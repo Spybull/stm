@@ -4,6 +4,7 @@
 #include "config.h"
 
 #include <stdbool.h>
+#include <string.h>
 #include <openssl/evp.h>
 
 char *
@@ -25,7 +26,9 @@ libstm_ask_password(const char *prompt, int verify, libstm_error_t *err)
         return NULL;
     }
 
-    return xstrdup0(passwd);
+    char *new_passwd = xstrdup(passwd);
+    explicit_bzero(passwd, strlen(passwd));
+    return new_passwd;
 }
 
 sqlite3 *
@@ -72,4 +75,12 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
     } while(true);
 
     return pdb;
+}
+
+void
+libstm_secure_memzero(void *ptr, size_t l)
+{
+    volatile unsigned char *p = (volatile unsigned char *)ptr;
+    while (l--)
+        *p++ = 0;
 }

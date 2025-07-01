@@ -10,6 +10,7 @@ CREATE TABLE [SERVERS] (                                                \
     name        TEXT NOT NULL CHECK (name != ''),                       \
     ip          TEXT NOT NULL,                                          \
     port        INTEGER NOT NULL CHECK (port >= 0 AND port <= 65535),   \
+    password    TEXT,                                                   \
     description TEXT,                                                   \
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP);                    \
 "
@@ -18,6 +19,7 @@ struct libstm_server_s {
 	char *name;
 	const char *ip;
 	unsigned short port;
+  char *password;
 	char *description;
 };
 typedef struct libstm_server_s libstm_server;
