@@ -1,6 +1,6 @@
 Name:		stm
 Version:	1.0
-Release: 	1%{?dist}
+Release: 	2%{?dist}
 Summary: 	Simple Trash Manager
 
 License:	GPL
@@ -8,9 +8,9 @@ URL:		https://github.com/Spybull/stm/
 Source0:	%{name}-%{version}.tar.gz
 
 BuildRequires: gcc, make, cmake
-BuildRequires: pkgconfig(sqlcipher), pkgconfig(openssl)
+BuildRequires: pkgconfig(sqlcipher), pkgconfig(openssl), pkgconfig(jansson)
 
-Requires: sqlcipher, openssl
+Requires: sqlcipher, openssl, jansson
 
 %description
 Simple Trash Manager
@@ -42,5 +42,8 @@ fi
 /usr/bin/stm
 
 %changelog
+* Tue Jul 1 2025 VB <spybull@proton.me> - 1.0-2
+- Add jansson library
+
 * Sun Jun 29 2025 VB <spybull@proton.me> - 1.0-1
 - Initial package
