@@ -9,13 +9,18 @@ set(SRCS
     sec.c
     sysuser.c
     utils.c
-    error.c)
+    error.c
+    formatter.c)
 
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SQLCIPHER REQUIRED sqlcipher)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(JANSSON REQUIRED jansson)
+
 add_library(libstm STATIC ${SRCS})
 target_link_libraries(libstm PRIVATE
                      crypto
-                     ${SQLCIPHER_LIBRARIES})
+                     ${SQLCIPHER_LIBRARIES}
+                     ${JANSSON_LIBRARIES})

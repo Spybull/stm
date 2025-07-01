@@ -2,8 +2,10 @@
 #include <argp.h>
 
 #include "libstm/db.h"
+#include "libstm/sec.h"
 #include "libstm/config.h"
 #include "libstm/utils.h"
+#include "libstm/formatter.h"
 
 static unsigned int flags = 0;
 static struct argp_option options[] = {
@@ -45,13 +47,16 @@ static struct argp argp = { options, parse_opt, NULL, doc, NULL, NULL, NULL };
 int
 stm_server_subcmd_list(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err stm_unused)
 {
-    int farg = 0;
-    flags |= FORMAT_CSV;
+    int rc = 0, farg = 0;
+    flags |= FORMAT_JSON;
     argp_parse(&argp, argc, argv, 0, &farg, NULL);
 
     glob_args->pdb = libstm_db_auth(NULL, NULL, err);
     if (!glob_args->pdb)
         return STM_GENERIC_ERROR;
     
-    return 0;
+    if (CHECK_FLAGS(flags, FORMAT_JSON))
+        rc = stmlib_fmt_print_json(glob_args->pdb, "SELECT * FROM SERVERS;", err);
+    
+    return rc;
 }
