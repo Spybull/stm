@@ -1,16 +1,18 @@
-#include "add.h"
+#include "server.h"
 #include <argp.h>
 
-#include "libstm/utils.h"
 #include "libstm/db.h"
+#include "libstm/utils.h"
 #include "libstm/sec.h"
-#include "subcommands/server.h"
+#include "subcommands/add.h"
+#include "subcommands/list.h"
 
-static stm_glob_args add_args;
+static stm_glob_args server_args;
 
-enum { CMD_SERVER = 1001 };
+enum { SERVER_ADD = 1001, SERVER_LIST };
 struct commands_s sub_cmds[] = {
-    { CMD_SERVER, "server", stm_subcommand_server },
+    { SERVER_ADD,  "add",  stm_server_subcmd_add  },
+    { SERVER_LIST, "list", stm_server_subcmd_list },
     { 0, }
 };
 static error_t
@@ -28,32 +30,26 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
 }
 
 static char doc[] = "\nSUBCOMMANDS:\n"
-                    "\tserver - add server\n";
-static char args_doc[] = "add SUBCOMMAND";
+                    "\tadd  - add server\n"
+                    "\tlist - list servers\n";
+static char args_doc[] = "name";
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
 int
-stm_command_add(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
+stm_command_server(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
 {
     int rc = 0, farg = 0;
     struct commands_s *curr_cmd;
 
-    add_args.argc = argc;
-    add_args.argv = argv;
+    server_args.argc = argc;
+    server_args.argv = argv;
 
-    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, &add_args);
+    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, &server_args);
     curr_cmd = stm_get_command(argv[farg], sub_cmds);
     if (!curr_cmd)
         libstm_fail_with_error(0, "unknown subcommand `%s`", argv[farg]);
 
-
-    add_args.pdb = libstm_db_auth(NULL, NULL, err);
-    if (!add_args.pdb)
-        return STM_GENERIC_ERROR;
-
-    rc = curr_cmd->handler(&add_args, argc - farg, argv + farg, err);
-    sqlite3_close_v2(add_args.pdb);
-
+    rc = curr_cmd->handler(&server_args, argc - farg, argv + farg, err);
     if (rc < 0 && (*err))
         libstm_fail_with_error((*err)->status, "%s", (*err)->msg);
 

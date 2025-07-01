@@ -25,9 +25,9 @@ add_subdirectory(src/libstm)
 set(SRCS
     src/cmd.c
     src/init.c
-    src/add.c
-    src/list.c
-    src/subcommands/server.c
+    src/server.c
+    src/subcommands/add.c
+    src/subcommands/list.c
     src/stm.c)
 
 target_link_libraries(stm PRIVATE libstm)

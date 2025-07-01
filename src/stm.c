@@ -8,22 +8,21 @@
 #include "libstm/sysuser.h"
 #include "libstm/file.h"
 #include "libstm/config.h"
+#include "libstm/db.h"
 
 /* STM HELPER FUNCTIONS */
 #include "cmd.h"
 
 /* STM COMMANDS IMPL */
 #include "init.h"
-#include "add.h"
-#include "list.h"
+#include "server.h"
 
 const char *argp_program_bug_address = "https://github.com/Spybull/stm/issues";
 static stm_glob_args arguments;
-enum { CMD_INIT = 1001, CMD_ADD, CMD_LIST };
+enum { CMD_INIT = 1001, CMD_SERVER, CMD_LIST };
 struct commands_s cmds[] = {
-    { CMD_INIT, "init", stm_command_init },
-    { CMD_ADD,  "add" , stm_command_add  },
-    { CMD_LIST, "list", stm_command_list },
+    { CMD_INIT,   "init",   stm_command_init   },
+    { CMD_SERVER, "server", stm_command_server },
     { 0, }
 };
 
@@ -43,9 +42,8 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
 
 static char args_doc[] = "COMMAND [OPTION...]";
 static char doc[] = "\nCOMMANDS:\n"
-                    "\tinit - initialize database\n"
-                    "\tlist - list records\n"
-                    "\tadd  - add record\n";
+                    "\tinit   - initialize database\n"
+                    "\tserver - manage servers\n";
 
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
@@ -78,9 +76,11 @@ int main(int argc, char **argv)
         goto exit_fail;
 
     if (chdir(stm_workdir) < 0)
-            libstm_fail_with_error(errno, "failed to change directory `%s` ", STM_SYSDIR_PATH);
+        libstm_fail_with_error(errno, "failed to change directory `%s` ", STM_SYSDIR_PATH);
 
     rc = curr_cmd->handler(&arguments, argc - farg, argv + farg, &err);
+    if (!arguments.pdb)
+        sqlite3_close_v2(arguments.pdb);
 
 exit_fail:
     if (rc < 0 && err)

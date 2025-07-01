@@ -1,9 +1,10 @@
-#include "server.h"
+#include "add.h"
 #include <argp.h>
 
-#include "libstm/db.h"
 #include "libstm/utils.h"
+#include "libstm/db.h"
 #include "libstm/sec.h"
+#include "server.h"
 
 enum {
     SERVER_IPADDR = 1001,
@@ -40,18 +41,22 @@ parse_opt(int key, char *arg, struct argp_state *state) {
 
     return 0;
 }
-static char doc[] = "server";
-static char args_doc[] = "name";
-static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL };
+
+static char doc[] = "STM server add";
+static struct argp argp = { options, parse_opt, NULL, doc, NULL, NULL, NULL };
 
 int
-stm_subcommand_server(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
+stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
 {
     libstm_server server = {0};
     argp_parse(&argp, argc, argv, 0, NULL, &server);
 
     if (!server.ip || !server.port)
         return stm_make_error(err, 0, "not all required parameters are specified");
+
+    glob_args->pdb = libstm_db_auth(NULL, NULL, err);
+    if (!glob_args->pdb)
+        return STM_GENERIC_ERROR;
 
     return libstm_db_server_add(glob_args->pdb, &server, err);
 }

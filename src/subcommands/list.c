@@ -39,21 +39,19 @@ parse_opt(int key, char *arg, struct argp_state *state stm_unused) {
     return 0;
 }
 
-static char doc[] = "\nSUBCOMMANDS:\n"
-                    "\tserver - show server records\n";
-static char args_doc[] = "list";
-static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL };
+static char doc[] = "STM server list";
+static struct argp argp = { options, parse_opt, NULL, doc, NULL, NULL, NULL };
 
 int
-stm_command_list(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err stm_unused)
+stm_server_subcmd_list(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err stm_unused)
 {
     int farg = 0;
     flags |= FORMAT_CSV;
     argp_parse(&argp, argc, argv, 0, &farg, NULL);
+
+    glob_args->pdb = libstm_db_auth(NULL, NULL, err);
+    if (!glob_args->pdb)
+        return STM_GENERIC_ERROR;
     
-    if (strcmp(argv[farg], "server")) {
-
-    }
-
     return 0;
 }
