@@ -26,10 +26,11 @@ set(SRCS
     src/cmd.c
     src/init.c
     src/creds.c
+    src/subcommands/creds/store.c
     src/server.c
-    src/subcommands/add.c
-    src/subcommands/del.c
-    src/subcommands/list.c
+    src/subcommands/server/add.c
+    src/subcommands/server/del.c
+    src/subcommands/server/list.c
     #src/subcommands/ssh.c
     src/stm.c)
 
