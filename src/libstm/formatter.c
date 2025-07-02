@@ -21,6 +21,8 @@ stmlib_fmt_print_json(sqlite3 *pdb, const char *query, libstm_error_t *err)
         json_t *row = json_object();
         for (int i = 0; i < cols; ++i) {
             const char *col = sqlite3_column_name(stmt, i);
+            if (strcmp(col, "id") == 0 || strcmp(col, "created_at") == 0)
+                continue;
             switch (sqlite3_column_type(stmt, i)) {
                 case SQLITE_INTEGER:
                     json_object_set_new(row, col, json_integer(sqlite3_column_int64(stmt, i)));

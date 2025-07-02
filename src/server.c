@@ -6,14 +6,16 @@
 #include "libstm/sec.h"
 
 #include "subcommands/add.h"
+#include "subcommands/del.h"
 #include "subcommands/list.h"
 //#include "subcommands/ssh.h"
 
 static stm_glob_args server_args;
 
-enum { SERVER_ADD = 1001, SERVER_LIST, SERVER_SSH };
+enum { SERVER_ADD = 1001, SERVER_LIST, SERVER_DEL };
 struct commands_s sub_cmds[] = {
     { SERVER_ADD,  "add",  stm_server_subcmd_add  },
+    { SERVER_DEL,  "del",  stm_server_subcmd_del  },
     { SERVER_LIST, "list", stm_server_subcmd_list },
     //{ SERVER_SSH,  "ssh",  stm_server_subcmd_ssh  },
     { 0, }
@@ -34,6 +36,7 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
 
 static char doc[] = "\nSUBCOMMANDS:\n"
                     "\tadd  - add server\n"
+                    "\tdel  - delete server\n"
                     "\tlist - list servers\n";
                     //"\tssh  - connect to server";
 static char args_doc[] = "name";

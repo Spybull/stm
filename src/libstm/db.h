@@ -40,6 +40,7 @@ int libstm_db_init(const char *filename, const char *pKey, int nKey, const char 
 int libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
 
 int libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
+int libstm_db_server_del(sqlite3 *pdb, const char *name, libstm_error_t *err);
 libstm_server *libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err);
 
 /* sqlcipher functions */

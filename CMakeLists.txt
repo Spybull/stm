@@ -27,6 +27,7 @@ set(SRCS
     src/init.c
     src/server.c
     src/subcommands/add.c
+    src/subcommands/del.c
     src/subcommands/list.c
     #src/subcommands/ssh.c
     src/stm.c)

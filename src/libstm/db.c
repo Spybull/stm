@@ -1,8 +1,8 @@
 #include "db.h"
 #include "file.h"
 #include "utils.h"
-#include "queries.h"
 #include "config.h"
+#include "queries.h"
 #include <stdbool.h>
 
 static int
@@ -149,6 +149,45 @@ libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err)
 {
     return add_server(pdb, ADD_SERVER, srv, err);
 }
+
+static int
+del_server(sqlite3 *pdb, const char *sql, const char *name, libstm_error_t *err)
+{
+    int rc = 0;
+    sqlite3_stmt *stmt = NULL;
+
+    rc = sqlite3_prepare_v2(pdb, sql, -1, &stmt, 0);
+    if (stm_unlikely(rc != SQLITE_OK))
+        return stm_make_error(err, 0, "failed to prepare statement: `%s`", sqlite3_errmsg(pdb));
+
+    rc = sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+    if (stm_unlikely(rc != SQLITE_OK)) {
+        sqlite3_finalize(stmt);
+        return stm_make_error(err, 0, "failed to bind parameter: `%s`", sqlite3_errmsg(pdb));
+    }
+    
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE)
+        return stm_make_error(err, 0, "failed to step: `%s`", sqlite3_errmsg(pdb));
+
+    rc = sqlite3_changes(pdb);
+    sqlite3_finalize(stmt);
+
+    if (rc == 0)
+        return stm_make_error(err, 0, "the account `%s` does not exists", name);
+
+    fprintf(stdout, "the account `%s`, was deleted\n", name);
+    return 0;
+}
+
+
+int
+libstm_db_server_del(sqlite3 *pdb, const char *name, libstm_error_t *err)
+{
+    return del_server(pdb, DELETE_SERVER, name, err);
+}
+
+
 
 static int
 server_get_cb(void *param, int argc, char **argv, char **colname)
