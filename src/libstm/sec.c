@@ -37,6 +37,13 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
     int rc = 0;
     int attempts = 3;
     sqlite3 *pdb = NULL;
+    smtcred_t creds = { 0 };
+    bool wanna_cache = false;
+
+    /* trying to ask credential daemon for password */
+    rc = libstm_is_daemon_active(STM_CRED_PID_PATH, err);
+    if (stm_unlikely(rc < 0))
+        return NULL;
 
     if (!prompt || !strlen(prompt))
         prompt = "Enter decryption key: ";
@@ -44,6 +51,20 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
     pdb = libstm_db_open(STM_DATABASE_NAME, NULL, err);
     if (pdb == NULL)
         return NULL;
+
+    /* if daemon is already active */
+    if (rc)
+    {
+        rc = libstm_is_password_cached(&creds, err);
+        if (stm_unlikely(rc < 0))
+            return NULL;
+        else if (rc == 0) // still not cached
+            wanna_cache = true;
+        else { // use already cached password
+            rc = libstm_db_decrypt(pdb, creds.password, creds.len, err);
+            return rc < 0 ? NULL : pdb;
+        }
+    }
 
     do
     {
@@ -62,6 +83,12 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
             fprintf(stderr, "wrong password, try again"
                             "(attempts remaining: %d)\n", --attempts);
         } else {
+            if (wanna_cache) {
+                rc = libstm_cache_creds(passwd, err);
+                if (rc < 0)
+                    return NULL;
+            }
+            
             if (pwout != NULL)
                 memcpy(pwout, passwd, strlen(passwd));
 

@@ -101,7 +101,8 @@ safe_path(char *buf, size_t size, const char *fmt, ...)
 }
 
 /* 1 - locked, 0 - not locked, < 0 - error */
-int libstm_is_file_locked(int fd, libstm_error_t *err)
+int
+libstm_is_file_locked(int fd, libstm_error_t *err)
 {
     struct flock lock;
     
@@ -114,4 +115,15 @@ int libstm_is_file_locked(int fd, libstm_error_t *err)
         return stm_make_error(err, errno, "failed to check lock on file in %s", __func__);
 
     return !(lock.l_type == F_UNLCK);
+}
+
+int
+libstm_lock_file(int fd) {
+
+    struct flock lock;
+    lock.l_type = F_WRLCK;
+    lock.l_start = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_len = 0;
+    return (fcntl(fd, F_SETLK, &lock));
 }

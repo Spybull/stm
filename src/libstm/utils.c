@@ -8,6 +8,15 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+FILE *
+xfdopen(int fd, const char *mode) {
+
+    FILE *stream = fdopen(fd, mode); 
+    if (stm_unlikely(stream == NULL))
+        stm_oom();
+    return stream;
+}
+
 void
 trim(char *line)
 {
@@ -127,6 +136,20 @@ libstm_daemonize(const char *pid_path, const char *log_path, const char *logname
 }
 
 int
+libstm_is_daemon_active(const char *pid_path, libstm_error_t *err)
+{
+    cleanup_close int fd = -1;
+
+    fd = open(pid_path, O_RDONLY);
+    if (stm_unlikely(fd < 0)) {
+        if (errno == ENOENT)
+            return 0;
+        return stm_make_error(err, errno, "failed to open daemon PID file `%s`", pid_path);
+    }
+    return libstm_is_file_locked(fd, err);
+}
+
+int
 libstm_unix_stream_listen(const char *path, libstm_error_t *err) {
 
     int sd = -1;
@@ -152,4 +175,96 @@ libstm_unix_stream_listen(const char *path, libstm_error_t *err) {
         return stm_make_error(err, errno, "failed to listen (UNIX) socket");
 
     return sd;
+}
+
+int
+libstm_unix_stream_connect(const char *path, libstm_error_t *err)
+{
+	int sd = -1, saved_errno;
+	struct sockaddr_un sa;
+    int size = strlen(path) + 1;
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sun_family = AF_UNIX;
+    memcpy(sa.sun_path, path, size);
+
+	sd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (sd < 0)
+		return stm_make_error(err, errno, "failed to create (UNIX) socket");
+
+    chmod(path, S_IRUSR|S_IWUSR);
+
+	if (connect(sd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
+		goto fail;
+
+	return sd;
+
+fail:
+	saved_errno = errno;
+	if (sd != -1)
+		close(sd);
+	errno = saved_errno;
+	return -1;
+
+}
+
+int
+libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err)
+{
+    int rc;
+    char un_path[108];
+    cleanup_close int sd = -1;
+    cleanup_close int sd2 = -1;
+    cleanup_file FILE *in = NULL;
+    cleanup_file FILE *out = NULL;
+
+    sd = libstm_unix_stream_connect(STM_CRED_SOCK_PATH, err);
+    if (stm_unlikely(sd < 0))
+        return stm_make_error(err, errno, "failed to connect to unix socket `%s`", un_path);
+
+    sd2 = dup(sd);
+    if (stm_unlikely(sd2 < 0))
+        return stm_make_error(err, errno, "failed to duplicate descriptor");
+    
+    in  = xfdopen(sd, "r");
+    out = xfdopen(sd2, "w");
+
+    fprintf(out, "getcred\n");
+    fflush(out);
+
+    char password[256];
+    if ( fgets(password, sizeof(password), in) == NULL )
+        return 0;
+
+    trim(password);
+
+    if (!strlen(password)) /* the password hasn't been cached yet */
+        return 0;
+
+    creds->len = strlen(password);
+    creds->password = xstrdup0(password);
+    creds->exp = 0;
+    return 1;
+
+}
+
+int
+libstm_cache_creds(const char *password, libstm_error_t *err)
+{
+    char un_path[108];
+    cleanup_close int sd = -1;
+    cleanup_file FILE *out = NULL;
+    const char *cfg_cachedir_path = NULL;
+
+    sd = libstm_unix_stream_connect(STM_CRED_SOCK_PATH, err);
+    if (stm_unlikely(sd < 0))
+        return stm_make_error(err, errno, "failed to connect to unix socket `%s`", un_path);
+
+    /* trying to set daemon password */
+    out = xfdopen(sd, "w");
+    fprintf(out, "setcred\n");
+    fprintf(out, "%s\n", password);
+    fflush(out);
+    return 0;
+
 }
