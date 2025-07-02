@@ -112,5 +112,6 @@ xstrdup0 (char *s)
 
 void trim(char *line);
 int libstm_get_workdir(char *out, libstm_error_t *err);
-int daemonize(const char *pid_path, const char *log_path, const char *logname, libstm_error_t *err);
+int libstm_daemonize(const char *pid_path, const char *log_path, const char *logname, libstm_error_t *err);
+int libstm_unix_stream_listen(const char *path, libstm_error_t *err);
 #endif

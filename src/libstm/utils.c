@@ -5,6 +5,9 @@
 #include <linux/limits.h>
 #include <syslog.h>
 
+#include <sys/socket.h>
+#include <sys/un.h>
+
 void
 trim(char *line)
 {
@@ -50,7 +53,7 @@ libstm_get_workdir(char *out, libstm_error_t *err)
 }
 
 int
-daemonize(const char *pid_path, const char *log_path, const char *logname, libstm_error_t *err)
+libstm_daemonize(const char *pid_path, const char *log_path, const char *logname, libstm_error_t *err)
 {
     int rc;
     openlog(logname, LOG_PID, LOG_USER);
@@ -121,4 +124,32 @@ daemonize(const char *pid_path, const char *log_path, const char *logname, libst
         return stm_make_error(err, 0, "already running, see PID in `%s`", pid_path);
 
     return pid;
+}
+
+int
+libstm_unix_stream_listen(const char *path, libstm_error_t *err) {
+
+    int sd = -1;
+    struct sockaddr_un sa;
+
+    unlink(path);
+    int size = strlen(path) + 1;
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sun_family = AF_UNIX;
+    memcpy(sa.sun_path, path, size);
+
+    sd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (stm_unlikely(sd < 0))
+        return stm_make_error(err, errno, "failed to create (UNIX) socket");
+
+    if (bind(sd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
+        return -1;
+
+    chmod(path, S_IRUSR|S_IWUSR);
+
+    if (listen(sd, 1) < 0)
+        return stm_make_error(err, errno, "failed to listen (UNIX) socket");
+
+    return sd;
 }
