@@ -47,6 +47,21 @@ int libstm_get_workdir(char *out, libstm_error_t *err);
 #define cleanup_free __attribute__ ((cleanup (cleanup_freep)))
 #define cleanup_file __attribute__ ((cleanup (cleanup_filep)))
 #define cleanup_close __attribute__ ((cleanup (cleanup_closep)))
+#define FNV_OFFSET 2166136261
+#define FNV_PRIME 16777619
+
+static inline unsigned int
+hash_string(const char *s)
+{
+  unsigned int i;
+
+	for (i = FNV_OFFSET; *s; s++) {
+		i += (i<<1) + (i<<4) + (i<<7) + (i<<8) + (i<<24);
+		i ^= *s;
+	}
+
+	return i;
+}
 
 inline static void
 cleanup_freep (void *p) {

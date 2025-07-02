@@ -3,6 +3,8 @@
 #include "error.h"
 #include <sqlite3.h>
 
+typedef int (*sqlite_cb)(void *, int, char *[], char *[]);
+
 #define CREATE_DRYDB                                                    \
 "                                                                       \
 CREATE TABLE [SERVERS] (                                                \
@@ -14,6 +16,15 @@ CREATE TABLE [SERVERS] (                                                \
     description TEXT,                                                   \
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP);                    \
 "
+
+enum
+{
+  NAME = 0x2f8b3bf4,
+  IP = 0x687720b2,
+  PORT = 0x5fe28198,
+  PASSWORD = 0x9b693732,
+  DESCRIPTION = 0x6b7119c1
+};
 
 struct libstm_server_s {
 	char *name;
@@ -27,7 +38,9 @@ typedef struct libstm_server_s libstm_server;
 sqlite3 *libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err);
 int libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err);
 int libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
+
 int libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
+libstm_server *libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err);
 
 /* sqlcipher functions */
 extern int sqlite3_key_v2(

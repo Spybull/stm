@@ -40,6 +40,14 @@ bind_int_by_str(sqlite3_stmt *stmt, int data, const char *zName)
     return sqlite3_bind_int(stmt, idx, data);
 }
 
+static int
+doquery_with_callback(sqlite3 *pdb, const char *query, sqlite_cb cb, void *param)
+{
+    int rc = 0;
+    rc = sqlite3_exec(pdb, query, cb, param, NULL);
+    return (rc == SQLITE_OK) ? 0 : -1;
+}
+
 sqlite3 *
 libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err)
 {
@@ -140,4 +148,46 @@ int
 libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err)
 {
     return add_server(pdb, ADD_SERVER, srv, err);
+}
+
+static int
+server_get_cb(void *param, int argc, char **argv, char **colname)
+{
+    libstm_server *srv = (libstm_server *)param;
+    if (argc < 0)
+        return 0;
+
+    for (int i = 0; i < argc; ++i) {
+        switch(hash_string(colname[i])) {
+            case NAME:        srv->name        = xstrdup(argv[i]); break;
+            case IP:          srv->ip          = xstrdup(argv[i]); break;
+            case PORT:        srv->port        = atoi(argv[i]);    break;
+            case PASSWORD:    srv->password    = !argv[i] ? NULL : xstrdup(argv[i]); break;
+            case DESCRIPTION: srv->description = !argv[i] ? NULL : xstrdup(argv[i]); break;
+        }
+    }
+
+    return 0;
+}
+
+libstm_server *
+libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err)
+{
+    int rc = 0;
+    char query[BUFSIZ] = {0};
+    libstm_server *srv = NULL;
+
+    snprintf(query, BUFSIZ, SELECT_ALL_WHERE_NAME_XXX, name);
+    srv = xmalloc(sizeof(libstm_server));
+
+    rc = doquery_with_callback(pdb, query, server_get_cb, srv);
+    if (rc != 0) {
+        stm_make_error(err, 0, "failed to execute query `%s` (%s)", query, sqlite3_errmsg(pdb));
+        return NULL;
+    }
+
+    if (stm_unlikely(srv->name == NULL))
+        return NULL;
+
+    return srv;
 }
