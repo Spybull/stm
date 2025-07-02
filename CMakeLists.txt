@@ -25,6 +25,7 @@ add_subdirectory(src/libstm)
 set(SRCS
     src/cmd.c
     src/init.c
+    src/creds.c
     src/server.c
     src/subcommands/add.c
     src/subcommands/del.c

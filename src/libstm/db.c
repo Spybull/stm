@@ -83,7 +83,7 @@ libstm_db_init(const char *filename, const char *pKey, int nKey, const char *sch
     int rc;
     sqlite3 *pdb;
 
-    rc = libstm_create_file(filename, err);
+    rc = libstm_create_file(filename, 0666, err);
     if (stm_unlikely(rc < 0))
         return rc;
 

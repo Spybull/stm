@@ -6,11 +6,13 @@
 #include <sys/file.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 int
-libstm_create_file(const char *path, libstm_error_t *err) {
+libstm_create_file(const char *path, mode_t mode, libstm_error_t *err)
+{
     cleanup_close int fd = -1;
-    fd = open(path, O_CREAT | O_EXCL, 0666);
+    fd = open(path, O_CREAT | O_EXCL, mode);
     if (fd < 0 && errno != EEXIST)
         return stm_make_error(err, errno, "failed to create file `%s`", path);
     return 0;
@@ -18,7 +20,8 @@ libstm_create_file(const char *path, libstm_error_t *err) {
 
 /* return 1 if path exists; return 0 if path doesn't exist else error*/
 int
-libstm_path_exists(const char *path, libstm_error_t *err) {
+libstm_path_exists(const char *path, libstm_error_t *err)
+{
     int ret = access(path, F_OK);
     if (ret < 0) {
         if (errno == ENOENT)
@@ -95,4 +98,20 @@ safe_path(char *buf, size_t size, const char *fmt, ...)
     vsnprintf(buf, size, fmt, args_list);
     va_end(args_list);
     return 0;
+}
+
+/* 1 - locked, 0 - not locked, < 0 - error */
+int libstm_is_file_locked(int fd, libstm_error_t *err)
+{
+    struct flock lock;
+    
+    lock.l_type = F_WRLCK;
+    lock.l_start = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_len = 0;
+
+    if (fcntl(fd, F_GETLK, &lock) < 0)
+        return stm_make_error(err, errno, "failed to check lock on file in %s", __func__);
+
+    return !(lock.l_type == F_UNLCK);
 }

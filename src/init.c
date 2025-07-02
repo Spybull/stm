@@ -17,7 +17,7 @@ stm_command_init(stm_glob_args *glob_args stm_unused,
                 int argc, char **argv, libstm_error_t *err)
 {
     int rc = 0;
-    argp_parse(&argp, argc, argv, 0, NULL, NULL);
+    argp_parse(&argp, argc, argv, 0, 0, 0);
 
     rc = libstm_path_exists(STM_DATABASE_NAME, err);
     if (stm_unlikely(rc < 0))

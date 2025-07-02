@@ -15,13 +15,20 @@
 
 /* STM COMMANDS IMPL */
 #include "init.h"
+#include "creds.h"
 #include "server.h"
 
 const char *argp_program_bug_address = "https://github.com/Spybull/stm/issues";
 static stm_glob_args arguments;
-enum { CMD_INIT = 1001, CMD_SERVER, CMD_LIST };
+enum { 
+    CMD_INIT = 1001,
+    CMD_CREDS,
+    CMD_SERVER
+};
+
 struct commands_s cmds[] = {
     { CMD_INIT,   "init",   stm_command_init   },
+    { CMD_CREDS,  "creds",  stm_command_creds  },
     { CMD_SERVER, "server", stm_command_server },
     { 0, }
 };
@@ -43,6 +50,7 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
 static char args_doc[] = "COMMAND [OPTION...]";
 static char doc[] = "\nCOMMANDS:\n"
                     "\tinit   - initialize database\n"
+                    "\tcreds  - credential manager\n"
                     "\tserver - manage servers\n";
 
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };

@@ -11,8 +11,6 @@
 
 #include "error.h"
 
-int libstm_get_workdir(char *out, libstm_error_t *err);
-
 #ifndef TEMP_FAILURE_RETRY
 #  define TEMP_FAILURE_RETRY(expression)      \
     (__extension__ ({                         \
@@ -113,5 +111,6 @@ xstrdup0 (char *s)
 }
 
 void trim(char *line);
-
+int libstm_get_workdir(char *out, libstm_error_t *err);
+int daemonize(const char *pid_path, const char *log_path, const char *logname, libstm_error_t *err);
 #endif
