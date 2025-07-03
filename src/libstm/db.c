@@ -55,7 +55,7 @@ libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err)
     sqlite3 *pdb = NULL;
 
     if (filename != NULL && stm_unlikely(access(filename, F_OK) < 0)) {
-        stm_make_error(err, errno, "database `%s` does not exists", filename);
+        stm_make_error(err, errno, "database `%s` does not exists ", filename);
         return NULL;
     }
 
