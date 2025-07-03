@@ -10,7 +10,7 @@
 static unsigned int flags = 0;
 static struct argp_option options[] = {
     { "no-headers", 'n', 0, 0, "Skip headers when output is csv", 0},
-    { "format", 'f', "FORMAT", 0, "Output format: json or csv (default: \"csv\")", 0 },
+    { "format", 'f', "FORMAT", 0, "Output format: json or csv (default: \"json\")", 0 },
     { 0, }
 };
 
@@ -28,9 +28,9 @@ parse_opt(int key, char *arg, struct argp_state *state stm_unused) {
                 flags |= FORMAT_JSON;
                 flags &= ~FORMAT_CSV;
             }
-            else if (strcmp(arg, "csv") == 0)
+            else if (strcmp(arg, "csv") == 0) {
                 flags |= FORMAT_CSV;
-            else
+            } else
                 libstm_fail_with_error(0, "invalid output format");
         break;
         
@@ -55,8 +55,10 @@ stm_server_subcmd_list(stm_glob_args *glob_args stm_unused, int argc, char **arg
     if (!glob_args->pdb)
         return STM_GENERIC_ERROR;
     
-    if (CHECK_FLAGS(flags, FORMAT_JSON))
+    if (CHECK_FLAGS(flags, FORMAT_CSV))
+        rc = stmlib_fmt_print_csv(glob_args->pdb, "SELECT * FROM SERVERS;", !CHECK_FLAGS(flags, NOHEADERS), err);
+    else
         rc = stmlib_fmt_print_json(glob_args->pdb, "SELECT * FROM SERVERS;", err);
-    
+
     return rc;
 }

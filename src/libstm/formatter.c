@@ -55,3 +55,52 @@ stmlib_fmt_print_json(sqlite3 *pdb, const char *query, libstm_error_t *err)
     return 0;
 
 }
+
+int
+stmlib_fmt_print_csv(sqlite3 *pdb, const char *query, bool with_header, libstm_error_t *err)
+{
+    int rc = 0;
+    sqlite3_stmt *stmt;
+
+    rc = sqlite3_prepare_v2(pdb, query, -1, &stmt, NULL);
+    if (stm_unlikely(rc != SQLITE_OK))
+        return stm_make_error(err, errno, "failed to prepare sql query: %s", sqlite3_errmsg(pdb));
+
+    int cols = sqlite3_column_count(stmt);
+
+    int include_cols[cols];
+    int out_cols = 0;
+    for (int i = 0; i < cols; ++i) {
+        const char *col = sqlite3_column_name(stmt, i);
+        if (strcmp(col, "id") != 0 && strcmp(col, "created_at") != 0) {
+            include_cols[out_cols++] = i;
+        }
+    }
+
+    if (with_header) {
+        for (int i = 0; i < out_cols; ++i) {
+            const char *col = sqlite3_column_name(stmt, include_cols[i]);
+            printf("%s%s", col, (i < out_cols - 1) ? "," : "\n");
+        }
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        for (int i = 0; i < out_cols; ++i) {
+            int col_index = include_cols[i];
+            if (sqlite3_column_type(stmt, col_index) == SQLITE_NULL) {
+                printf("\"\"%s", (i < out_cols - 1) ? "," : "\n");
+            } else {
+                const unsigned char *raw = sqlite3_column_text(stmt, col_index);
+                printf("\"");
+                for (const unsigned char *p = raw; *p; ++p) {
+                    if (*p == '"') putchar('"');
+                    putchar(*p);
+                }
+                printf("\"%s", (i < out_cols - 1) ? "," : "\n");
+            }
+        }
+    }
+
+    sqlite3_finalize(stmt);
+    return 0;
+}
