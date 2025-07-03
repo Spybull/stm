@@ -44,7 +44,6 @@ trim(char *line)
 int
 libstm_get_workdir(char *out, libstm_error_t *err)
 {
-    int rc;
     cleanup_free char *home_path = NULL;
 
     const char *env = getenv("HOME");
@@ -211,7 +210,6 @@ fail:
 int
 libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err)
 {
-    int rc;
     char un_path[108];
     cleanup_close int sd = -1;
     cleanup_close int sd2 = -1;
@@ -254,7 +252,6 @@ libstm_cache_creds(const char *password, libstm_error_t *err)
     char un_path[108];
     cleanup_close int sd = -1;
     cleanup_file FILE *out = NULL;
-    const char *cfg_cachedir_path = NULL;
 
     sd = libstm_unix_stream_connect(STM_CRED_SOCK_PATH, err);
     if (stm_unlikely(sd < 0))

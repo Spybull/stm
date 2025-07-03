@@ -13,7 +13,7 @@ target_compile_options(stm PRIVATE -Wall -Wextra -Werror -pedantic)
 target_compile_options(stm PRIVATE $<$<CONFIG:Debug>:-g -O0>)
 target_compile_options(stm PRIVATE $<$<CONFIG:Release>:-O3>)
 add_definitions(-D_GNU_SOURCE -D_XOPEN_SOURCE)
-
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -pedantic")
 target_include_directories(stm PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 if(NOT CMAKE_BUILD_TYPE)

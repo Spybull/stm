@@ -60,7 +60,12 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     int fd_lock = open(pid_path, O_WRONLY);
     char buf[16];
     sprintf(buf, "%ld", (long)getpid());
-    write(fd_lock, buf, strlen(buf) + 1);
+    if (write(fd_lock, buf, strlen(buf) + 1) < 0) {
+        syslog(LOG_USER | LOG_ERR, "failed to start daemon: %s", (*err)->msg);
+        closelog();
+        exit(EXIT_FAILURE);
+    }
+
     libstm_lock_file(fd_lock);
 
     const char *unix_socket_path = STM_CRED_SOCK_PATH;
@@ -116,7 +121,7 @@ accept_client(void *data) {
         } else if (strcmp(buffer, "setcred\n") == 0) {
             syslog(LOG_USER | LOG_INFO, "setting credentials command issued");
                 char pass[256];
-                fgets(pass, 256, in);
+                (void *) fgets(pass, 256, in);
                 pass[strcspn(pass, "\n")] = 0;
 #ifdef DEBUG
                 syslog(UINF, "password to save: `%s`", pass);

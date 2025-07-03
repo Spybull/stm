@@ -54,7 +54,7 @@ libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err)
     int rc;
     sqlite3 *pdb = NULL;
 
-    if (!filename && stm_unlikely(access(filename, F_OK) < 0)) {
+    if (filename != NULL && stm_unlikely(access(filename, F_OK) < 0)) {
         stm_make_error(err, errno, "database `%s` does not exists", filename);
         return NULL;
     }
@@ -120,7 +120,7 @@ libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err)
 static int
 add_server(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *err)
 {
-    int rc = 0, idx = -1;
+    int rc = 0;
     sqlite3_stmt *stmt = NULL;
 
     rc = sqlite3_prepare_v2(pdb, sql, -1, &stmt, NULL);

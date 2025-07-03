@@ -14,7 +14,6 @@
 int
 libstm_init(libstm_error_t *err)
 {
-    int rc = 0;
     char *passwd = NULL;
 
     passwd = libstm_ask_password("setup database password: ", true, err);
