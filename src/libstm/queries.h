@@ -5,8 +5,8 @@ const char SELECT_ALL_SERVERS[] =
     "SELECT * FROM SERVERS;";
 
 const char ADD_SERVER[] =
-    "INSERT INTO SERVERS (name, ip, port, password, description) VALUES "
-    "(:name, :ip, :port, :password, :description);";
+    "INSERT INTO SERVERS (name, ip, port, proto, login, creds, description) VALUES "
+    "(:name, :ip, :port, :proto, :login, :creds, :description);";
 
 const char DELETE_SERVER[] = 
     "DELETE FROM SERVERS WHERE name = ?;";

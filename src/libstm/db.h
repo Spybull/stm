@@ -8,29 +8,36 @@ typedef int (*sqlite_cb)(void *, int, char *[], char *[]);
 #define CREATE_DRYDB                                                    \
 "                                                                       \
 CREATE TABLE [SERVERS] (                                                \
-    id          INTEGER PRIMARY KEY,                                    \
-    name        TEXT NOT NULL CHECK (name != ''),                       \
-    ip          TEXT NOT NULL,                                          \
-    port        INTEGER NOT NULL CHECK (port >= 0 AND port <= 65535),   \
-    password    TEXT,                                                   \
-    description TEXT,                                                   \
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP);                    \
+	id          INTEGER PRIMARY KEY,                                    \
+	name        TEXT NOT NULL CHECK (name != '') UNIQUE,                \
+	ip          TEXT NOT NULL,                                          \
+	port        INTEGER DEFAULT 22 CHECK (port >= 0 AND port <= 65535), \
+	proto       TEXT DEFAULT 'TCP',                                     \
+	login       TEXT,                                                   \
+	creds       TEXT,                                                   \
+	description TEXT,                                                   \
+	created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,                     \
+	UNIQUE(ip, port, login));                                           \
 "
 
 enum
 {
-  NAME = 0x2f8b3bf4,
-  IP = 0x687720b2,
-  PORT = 0x5fe28198,
-  PASSWORD = 0x9b693732,
-  DESCRIPTION = 0x6b7119c1
+	NAME  = 0x2f8b3bf4,
+	IP    = 0x687720b2,
+	PORT  = 0x5fe28198,
+	PROTO = 0x35b2a389,
+	LOGIN = 0x45a1edc,
+	CREDS = 0xb8b76830,
+	DESCRIPTION = 0x6b7119c1
 };
 
 struct libstm_server_s {
 	char *name;
 	const char *ip;
 	unsigned short port;
-  char *password;
+	const char *proto;
+	const char *login;
+	char *creds;
 	char *description;
 };
 typedef struct libstm_server_s libstm_server;
@@ -45,17 +52,15 @@ libstm_server *libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error
 
 /* sqlcipher functions */
 extern int sqlite3_key_v2(
-  sqlite3 *db,                   /* Database to be keyed */
-  const char *zDbName,           /* Name of the database */
-  const void *pKey, int nKey     /* The key */
+	sqlite3 *db,                   /* Database to be keyed */
+	const char *zDbName,           /* Name of the database */
+	const void *pKey, int nKey     /* The key */
 );
 
 extern int sqlite3_rekey_v2(
-    sqlite3 *db,               /* Database to be rekeyed */
-    const char *zDbName,       /* Which ATTACHed database to rekey */
-    const void *pKey, int nKey /* The new key */
+	sqlite3 *db,               /* Database to be rekeyed */
+	const char *zDbName,       /* Which ATTACHed database to rekey */
+	const void *pKey, int nKey /* The new key */
 );
-
-
 
 #endif

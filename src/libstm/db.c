@@ -102,6 +102,7 @@ libstm_db_init(const char *filename, const char *pKey, int nKey, const char *sch
     if (rc != SQLITE_OK)
         return stm_make_error(err, 0, "failed to create default schemes, %s", sqlite3_errmsg(pdb));
 
+    
     sqlite3_close_v2(pdb);
     return 0;
 }
@@ -127,16 +128,22 @@ add_server(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *er
     if (stm_unlikely(rc != SQLITE_OK))
         return stm_make_error(err, sqlite3_errcode(pdb), "failed to prepare: %s", sqlite3_errmsg(pdb));
     
-    bind_int_by_str(stmt,  srv->port,        ":port");
     bind_text_by_str(stmt, srv->name,        ":name",        true);
     bind_text_by_str(stmt, srv->ip,          ":ip",          true);
-    bind_text_by_str(stmt, srv->password,    ":password",    true);
+    bind_text_by_str(stmt, srv->proto,       ":proto",       true);
+    bind_text_by_str(stmt, srv->login,       ":login",       true);
+    bind_text_by_str(stmt, srv->creds,       ":creds",       true);
     bind_text_by_str(stmt, srv->description, ":description", true);
+    bind_int_by_str(stmt,  srv->port,        ":port");
     
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
         sqlite3_finalize(stmt);
-        return stm_make_error(err, sqlite3_errcode(pdb), "failed to create server (%s): %s",
+        if (rc == SQLITE_CONSTRAINT)
+            return stm_make_error(err, 0, "failed to add server `%s`: %s",
+                                    srv->name, "already exists");
+
+        return stm_make_error(err, 0, "failed to create server `%s`: %s",
                                  srv->name, sqlite3_errmsg(pdb));
     }
     
@@ -201,7 +208,9 @@ server_get_cb(void *param, int argc, char **argv, char **colname)
             case NAME:        srv->name        = xstrdup(argv[i]); break;
             case IP:          srv->ip          = xstrdup(argv[i]); break;
             case PORT:        srv->port        = atoi(argv[i]);    break;
-            case PASSWORD:    srv->password    = !argv[i] ? NULL : xstrdup(argv[i]); break;
+            case PROTO:       srv->proto       = xstrdup(argv[i]); break;
+            case LOGIN:       srv->login       = !argv[i] ? NULL : xstrdup(argv[i]); break;
+            case CREDS:       srv->creds       = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case DESCRIPTION: srv->description = !argv[i] ? NULL : xstrdup(argv[i]); break;
         }
     }

@@ -10,18 +10,23 @@
 
 static bool interactive = false;
 enum {
-    SERVER_IPADDR = 1001,
-    SERVER_PASS,
+    SERVER_IPADDR = 'i',
+    SERVER_CREDS = 'c',
     SERVER_PORT = 'p',
-    SERVER_DESCRIPTION = 'd'
+    SERVER_PROTO = 'k',
+    SERVER_LOGIN = 'l',
+    SERVER_DESCRIPTION = 'd',
+    INTERACTIVE_INPUT = 1001
 };
 
 static struct argp_option options[] = {
-    { "ip",            SERVER_IPADDR,      "STRING", 0,                   "IPv4/IPv6 address", 0},
-    { "port",          SERVER_PORT,        "NUMBER", 0,                   "TCP port number",   0},
-    { "password",      SERVER_PASS,        "STRING", OPTION_ARG_OPTIONAL, "Password",          0},
-    { "description",   SERVER_DESCRIPTION, "STRING", OPTION_ARG_OPTIONAL, "description",       0},
-    { "interactive",   'i',                0,         0,                  "enter password interactively" , 0},
+    { "ip",            SERVER_IPADDR,      "STRING", 0,                   "IPv4/IPv6 address",             0},
+    { "port",          SERVER_PORT,        "NUMBER", 0,                   "TCP port number (default: 22)", 0},
+    { "creds",         SERVER_CREDS,       "STRING", OPTION_ARG_OPTIONAL, "Credentials",                   0},
+    { "protocol",      SERVER_PROTO,       "STRING", OPTION_ARG_OPTIONAL, "Protocol (default: tcp)",       0},
+    { "login",         SERVER_LOGIN,       "STRING", 0, "Login",                         0},
+    { "description",   SERVER_DESCRIPTION, "STRING", OPTION_ARG_OPTIONAL, "Description",                   0},
+    { "interactive",   INTERACTIVE_INPUT,   0,       0,                   "Enter creds interactively",     0},
     { 0, }
 };
 
@@ -32,16 +37,32 @@ parse_opt(int key, char *arg, struct argp_state *state) {
 
     switch (key)
     {
-        case SERVER_IPADDR: args->ip = arg; break;
-        case SERVER_PORT: args->port = (unsigned short)atoi(arg); break;
+        case SERVER_IPADDR:
+            args->ip = arg;
+        break;
 
-        case SERVER_PASS:
-            args->password = xstrdup(arg);
+        case SERVER_PORT:
+            args->port = (unsigned short)atoi(arg);
+        break;
+
+        case SERVER_CREDS:
+            args->creds = xstrdup(arg);
             /* TODO: need some sec tests */
             explicit_bzero(arg, strlen(arg)); // or libstm_secure_memzero 
         break;
 
-        case 'i': interactive = true; break;
+        case SERVER_PROTO:
+            args->proto = arg;
+        break;
+
+        case SERVER_LOGIN:
+            args->login = arg;
+        break;
+
+        case INTERACTIVE_INPUT:
+            interactive = true;
+        break;
+
         case ARGP_KEY_ARG:
             if (state->arg_num == 0)
                 args->name = arg;
@@ -63,15 +84,15 @@ static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
 int
 stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
 {
-    libstm_server server = {0};
-    argp_parse(&argp, argc, argv, 0, 0, &server);
+    libstm_server server = { .port = 22, .proto = "tcp" };
+    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, 0, &server);
 
-    if (!server.ip || !server.port)
-        return stm_make_error(err, 0, "not all required parameters are specified");
+    if (!server.ip)
+        return stm_make_error(err, 0, "ip address is required");
 
-    if (interactive && !server.password) {
-        server.password = libstm_ask_password("Enter server password: ", 0, err);
-        if (stm_unlikely(server.password == NULL))
+    if (interactive && !server.creds) {
+        server.creds = libstm_ask_password("Enter server credentials: ", 0, err);
+        if (stm_unlikely(server.creds == NULL))
             return STM_GENERIC_ERROR;
     }
 
@@ -79,7 +100,7 @@ stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv
     if (!glob_args->pdb)
         return STM_GENERIC_ERROR;
 
-    if (!server.password)
-        free(server.password);
+    if (!server.creds)
+        free(server.creds);
     return libstm_db_server_add(glob_args->pdb, &server, err);
 }

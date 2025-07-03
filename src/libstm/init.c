@@ -14,11 +14,16 @@
 int
 libstm_init(libstm_error_t *err)
 {
+    int rc = 0;
     char *passwd = NULL;
 
     passwd = libstm_ask_password("setup database password: ", true, err);
     if (passwd == NULL)
         return STM_GENERIC_ERROR;
 
-    return libstm_db_init(STM_DATABASE_NAME, passwd, strlen(passwd), NULL, err);
+    rc = libstm_db_init(STM_DATABASE_NAME, passwd, strlen(passwd), NULL, err);
+    if (rc < 0)
+        unlink(STM_DATABASE_NAME);
+    
+    return rc;
 }
