@@ -121,7 +121,8 @@ accept_client(void *data) {
         } else if (strcmp(buffer, "setcred\n") == 0) {
             syslog(LOG_USER | LOG_INFO, "setting credentials command issued");
                 char pass[256];
-                (void *) fgets(pass, 256, in);
+                if (fgets(pass, 256, in) == NULL)
+                    return NULL;
                 pass[strcspn(pass, "\n")] = 0;
 #ifdef DEBUG
                 syslog(UINF, "password to save: `%s`", pass);
