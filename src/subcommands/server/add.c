@@ -84,7 +84,7 @@ static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
 int
 stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
 {
-    libstm_server server = { .port = 22, .proto = "tcp" };
+    libstm_server server = { .port = 22, .proto = "tcp", .login = "root" };
     argp_parse(&argp, argc, argv, ARGP_IN_ORDER, 0, &server);
 
     if (!server.ip)

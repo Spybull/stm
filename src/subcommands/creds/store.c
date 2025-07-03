@@ -7,7 +7,10 @@
 #include "libstm/utils.h"
 #include <signal.h>
 #include <sys/socket.h>
+#include <stdbool.h>
 
+
+static bool save_immediately = false;
 static char *globcred = NULL;
 static void *accept_client(void *);
 
@@ -24,8 +27,28 @@ handle_signal(int signal)
     exit(EXIT_SUCCESS);
 }
 
+static struct argp_option options[] = {
+    { "now", 'n', "STRING", 0, "save creds immediately", 0},
+    { 0, }
+};
+static error_t
+parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
+
+    switch (key)
+    {
+        case 'n':
+            save_immediately = true;
+        break;
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
 static char doc[] = "STM creds store";
-static struct argp argp = { 0, 0, "NAME", doc, NULL, NULL, NULL };
+static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
 int
 stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err stm_unused)
 {
@@ -38,7 +61,7 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     }
 
     argp_parse(&argp, argc, argv, 0, 0, 0);
-    
+
     struct sigaction sa;
     sa.sa_flags = 0;
     sa.sa_handler = handle_signal;
@@ -47,8 +70,8 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     sigaction(SIGTERM, &sa, NULL);
 
     rc = libstm_daemonize(pid_path, log_path, "STM CRED HELPER", err);
-    if (rc == 100)
-        exit(EXIT_SUCCESS);
+    if (rc == 100) // parent process
+        exit(EXIT_FAILURE);
 
     if (rc <= 0) {
         syslog(LOG_USER | LOG_ERR, "failed to start daemon: %s", (*err)->msg);
@@ -77,8 +100,9 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     }
 
     alarm(60 * 60); //60 mins
-    while(1) {
 
+    while(1)
+    {
         int client_fd = accept(sd, NULL, NULL);
         if (client_fd < 0) {
             syslog(LOG_USER | LOG_ERR, "failed to accept conection: `%s`", strerror(errno));
