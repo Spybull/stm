@@ -26,9 +26,8 @@ libstm_ask_password(const char *prompt, int verify, libstm_error_t *err)
         return NULL;
     }
 
-    char *new_passwd = xstrdup(passwd);
     explicit_bzero(passwd, strlen(passwd));
-    return new_passwd;
+    return xstrdup0(passwd);
 }
 
 sqlite3 *
@@ -62,10 +61,12 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
             wanna_cache = true;
         else { // use already cached password
             rc = libstm_db_decrypt(pdb, creds.password, creds.len, err);
+            explicit_bzero(creds.password, strlen(creds.password));
             return rc < 0 ? NULL : pdb;
         }
     }
 
+    cleanup_free_zero char *passwd = NULL;
     do
     {
         if (!attempts) {
@@ -74,7 +75,7 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
             return NULL;
         }
 
-        char *passwd = libstm_ask_password(prompt, 0, err);
+        passwd = libstm_ask_password(prompt, 0, err);
         if (!passwd)
             return NULL;
 
@@ -92,13 +93,9 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
             if (pwout != NULL)
                 memcpy(pwout, passwd, strlen(passwd));
 
-            memset(passwd, '\0', strlen(passwd));
-            free(passwd);
             return pdb;
         }
 
-        memset(passwd, '\0', strlen(passwd));
-        free(passwd);
     } while(true);
 
     return pdb;

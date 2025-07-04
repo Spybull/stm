@@ -4,8 +4,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <syslog.h>
 
 #define STM_GENERIC_ERROR -1
+
+/* syslog */
+#define UERR LOG_USER | LOG_ERR
+#define UINF LOG_USER | LOG_INFO
 
 struct libstm_error_s {
   int status;

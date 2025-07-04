@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-
 #include "utils.h"
+
 
 int
 libstm_make_error(libstm_error_t *err, int status, const char *msg, ...)

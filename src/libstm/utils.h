@@ -42,7 +42,8 @@
     #define stm_prefetch(x, ...) (x, __VA_ARGS__)
 #endif
 
-#define cleanup_free __attribute__ ((cleanup (cleanup_freep)))
+#define cleanup_free      __attribute__ ((cleanup (cleanup_freep)))
+#define cleanup_free_zero __attribute__ ((cleanup (cleanup_freep_zero)))
 #define cleanup_file __attribute__ ((cleanup (cleanup_filep)))
 #define cleanup_close __attribute__ ((cleanup (cleanup_closep)))
 #define FNV_OFFSET 2166136261
@@ -51,7 +52,7 @@
 #define STM_CRED_PID_PATH  "/var/lib/stm/cred.pid"
 #define STM_CRED_LOG_PATH  "/var/lib/stm/cred.log"
 #define STM_CRED_SOCK_PATH "/var/lib/stm/cred.sock"
-
+#define PARENT_RC 666
 struct stmcred_s {
    char *password;
    size_t len;
@@ -76,6 +77,14 @@ inline static void
 cleanup_freep (void *p) {
   void **pp = (void **) p;
   free (*pp);
+}
+
+inline static void
+cleanup_freep_zero (void *p) {
+  void **pp = (void **) p;
+  if (pp && *pp)
+    explicit_bzero(*pp, strlen((char *)*pp));
+  free(*pp);
 }
 
 inline static void

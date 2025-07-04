@@ -87,7 +87,7 @@ libstm_daemonize(const char *pid_path, const char *log_path, const char *logname
     
     pid_t np = fork();
     if (stm_likely(np > 0))
-        return 100;
+        return PARENT_RC;
     else if (stm_unlikely(np == -1))
         return -1;
 
@@ -242,6 +242,8 @@ libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err)
     creds->len = strlen(password);
     creds->password = xstrdup0(password);
     creds->exp = 0;
+
+    explicit_bzero(password, strlen(password));
     return 1;
 
 }
@@ -259,6 +261,8 @@ libstm_cache_creds(const char *password, libstm_error_t *err)
 
     /* trying to set daemon password */
     out = xfdopen(sd, "w");
+    setvbuf(out, NULL, _IONBF, 0);
+
     fprintf(out, "setcred\n");
     fprintf(out, "%s\n", password);
     fflush(out);

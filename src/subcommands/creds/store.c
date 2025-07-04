@@ -5,10 +5,13 @@
 #include <pthread.h>
 #include "libstm/file.h"
 #include "libstm/utils.h"
+#include "libstm/sec.h"
 #include <signal.h>
 #include <sys/socket.h>
 #include <stdbool.h>
-
+#include <time.h>
+#include <sys/select.h>
+#include <string.h>
 
 static bool save_immediately = false;
 static char *globcred = NULL;
@@ -18,17 +21,20 @@ static void
 handle_signal(int signal)
 {
     if (signal == SIGTERM) {
-        syslog(LOG_USER | LOG_INFO, "terminating %s credential daemon", "STM CRED HELPER");
+        syslog(UINF, "terminating %s credential daemon", "STM CRED HELPER");
     } else if (signal == SIGALRM) {
-        syslog(LOG_USER | LOG_INFO, "terminating %s by timeout", "STM CRED HELPER");
-        globcred = NULL; // TODO: etc...
+        syslog(UINF, "terminating %s by timeout", "STM CRED HELPER");
+        if (globcred)
+            explicit_bzero(globcred, strlen(globcred));
+        
+        free(globcred);
     }
 
     exit(EXIT_SUCCESS);
 }
 
 static struct argp_option options[] = {
-    { "now", 'n', "STRING", 0, "save creds immediately", 0},
+    { "now", 'n', 0, 0, "save creds immediately", 0},
     { 0, }
 };
 static error_t
@@ -55,6 +61,7 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     int rc = 0;
     const char *pid_path = STM_CRED_PID_PATH;
     const char *log_path = STM_CRED_LOG_PATH;
+
     if (libstm_is_daemon_active(pid_path, err) > 0) {
         fprintf(stdout, "stm credential daemon already running\n");
         return 0;
@@ -69,22 +76,33 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     sigaction(SIGALRM, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
+    if (save_immediately) {
+        globcred = libstm_ask_password("enter database password: ", false, err);
+        if (!globcred)
+            fprintf(stderr, "could not auth immediately (%s)", (*err)->msg);
+    }
+
     rc = libstm_daemonize(pid_path, log_path, "STM CRED HELPER", err);
-    if (rc == 100) // parent process
-        exit(EXIT_FAILURE);
+    if (rc == PARENT_RC) {
+        if (globcred)
+            explicit_bzero(globcred, strlen(globcred));
+        
+        free(globcred);
+        return 0;
+    }
 
     if (rc <= 0) {
-        syslog(LOG_USER | LOG_ERR, "failed to start daemon: %s", (*err)->msg);
+        syslog(UERR, "failed to start daemon: %s", (*err)->msg);
         closelog();
         exit(EXIT_FAILURE);
     }
 
-    syslog(LOG_USER | LOG_INFO, "starting stm credential store daemon");
+    syslog(UINF, "starting stm credential store daemon");
     int fd_lock = open(pid_path, O_WRONLY);
     char buf[16];
     sprintf(buf, "%ld", (long)getpid());
     if (write(fd_lock, buf, strlen(buf) + 1) < 0) {
-        syslog(LOG_USER | LOG_ERR, "failed to start daemon: %s", (*err)->msg);
+        syslog(UERR, "failed to start daemon: %s", (*err)->msg);
         closelog();
         exit(EXIT_FAILURE);
     }
@@ -94,7 +112,7 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     const char *unix_socket_path = STM_CRED_SOCK_PATH;
     int sd = libstm_unix_stream_listen(unix_socket_path, err);
     if (sd < 0) {
-        syslog(LOG_USER | LOG_ERR, "failed to bind `%s` unix socket", unix_socket_path);
+        syslog(UERR, "failed to bind `%s` unix socket", unix_socket_path);
         closelog();
         exit(EXIT_FAILURE);
     }
@@ -105,11 +123,11 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     {
         int client_fd = accept(sd, NULL, NULL);
         if (client_fd < 0) {
-            syslog(LOG_USER | LOG_ERR, "failed to accept conection: `%s`", strerror(errno));
+            syslog(UERR, "failed to accept conection: `%s`", strerror(errno));
             continue;
         }
 
-        syslog(LOG_USER | LOG_INFO, "accepted connection");
+        syslog(UINF, "accepted connection");
         pthread_t th;
         rc = pthread_create(&th, NULL, accept_client, &client_fd);
         if (rc != 0)
@@ -131,27 +149,28 @@ accept_client(void *data) {
     int sd2;
     
     sd2 = dup(sd);
-    in  = fdopen(sd, "r");
-    out = fdopen(sd2, "w");
+    in  = xfdopen(sd, "r");
+    out = xfdopen(sd2, "w");
 
     char buffer[4096] = {0};
+    setvbuf(out, NULL, _IONBF, 0);
+    setvbuf(in, NULL, _IONBF, 0);
     while (fgets(buffer, 4096, in) != NULL) {
 
         if (strcmp(buffer, "getcred\n") == 0) {
-            syslog(LOG_USER | LOG_INFO, "getting credentials command issued");
+            syslog(UINF, "getting credentials command issued");
             fprintf(out, "%s\n", globcred ? globcred : "");
             fflush(out);
             
         } else if (strcmp(buffer, "setcred\n") == 0) {
-            syslog(LOG_USER | LOG_INFO, "setting credentials command issued");
+            syslog(UINF, "setting credentials command issued");
                 char pass[256];
                 if (fgets(pass, 256, in) == NULL)
                     return NULL;
+
                 pass[strcspn(pass, "\n")] = 0;
-#ifdef DEBUG
-                syslog(UINF, "password to save: `%s`", pass);
-#endif
                 globcred = xstrdup0(pass);
+                explicit_bzero(pass, strlen(pass));
         } else if (strcmp(buffer, "gettime\n") == 0) {
             unsigned int remaining_time = alarm(0);
             alarm(remaining_time);
@@ -159,7 +178,7 @@ accept_client(void *data) {
             fflush(out);
         }
     }
-    
-    return NULL;
 
+
+    return NULL;
 }
