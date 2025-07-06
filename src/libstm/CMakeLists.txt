@@ -7,7 +7,7 @@ set(SRCS
     db.c
     file.c
     sec.c
-#    ssh.c
+    ssh.c
     sysuser.c
     utils.c
     error.c
@@ -16,12 +16,12 @@ set(SRCS
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SQLCIPHER REQUIRED sqlcipher)
-
-find_package(PkgConfig REQUIRED)
 pkg_check_modules(JANSSON REQUIRED jansson)
+pkg_check_modules(LIBSSH REQUIRED libssh)
 
 add_library(libstm STATIC ${SRCS})
 target_link_libraries(libstm PRIVATE
                      crypto
                      ${SQLCIPHER_LIBRARIES}
-                     ${JANSSON_LIBRARIES})
+                     ${JANSSON_LIBRARIES}
+                     ${LIBSSH_LIBRARIES})

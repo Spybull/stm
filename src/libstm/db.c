@@ -205,10 +205,13 @@ server_get_cb(void *param, int argc, char **argv, char **colname)
 
     for (int i = 0; i < argc; ++i) {
         switch(hash_string(colname[i])) {
-            case NAME:        srv->name        = xstrdup(argv[i]); break;
-            case IP:          srv->ip          = xstrdup(argv[i]); break;
+            case NAME:
+                if (argv[i] != NULL)
+                    srv->name = xstrdup(argv[i]);
+            break;
+            case IP:          srv->ip          = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case PORT:        srv->port        = atoi(argv[i]);    break;
-            case PROTO:       srv->proto       = xstrdup(argv[i]); break;
+            case PROTO:       srv->proto       = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case LOGIN:       srv->login       = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case CREDS:       srv->creds       = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case DESCRIPTION: srv->description = !argv[i] ? NULL : xstrdup(argv[i]); break;
@@ -226,7 +229,7 @@ libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err)
     libstm_server *srv = NULL;
 
     snprintf(query, BUFSIZ, SELECT_ALL_WHERE_NAME_XXX, name);
-    srv = xmalloc(sizeof(libstm_server));
+    srv = xmalloc0(sizeof(libstm_server));
 
     rc = doquery_with_callback(pdb, query, server_get_cb, srv);
     if (rc != 0) {
@@ -234,8 +237,30 @@ libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err)
         return NULL;
     }
 
-    if (stm_unlikely(srv->name == NULL))
+    if (srv->name == NULL) {
+        stm_make_error(err, 0, "server `%s` not found", name);
+        libstm_server_free(srv);
         return NULL;
+    }
 
     return srv;
+}
+
+void
+libstm_server_free(libstm_server *srv)
+{
+    if (srv->name)
+        free(srv->name);
+    if (srv->login)
+        free(srv->login);
+    if (srv->ip)
+        free(srv->ip);
+    if (srv->proto)
+        free(srv->proto);
+
+    if (srv->creds) {
+        explicit_bzero(srv->creds, strlen(srv->creds));
+        free(srv->creds);
+        srv->creds = NULL;
+    }
 }

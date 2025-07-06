@@ -12,6 +12,7 @@
 #include <time.h>
 #include <sys/select.h>
 #include <string.h>
+#include <openssl/evp.h>
 
 static bool save_immediately = false;
 static char *globcred = NULL;
@@ -69,18 +70,25 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
 
     argp_parse(&argp, argc, argv, 0, 0, 0);
 
+    if (save_immediately)
+    {
+        char buf[BUFSIZ] = {0};
+        if (EVP_read_pw_string(buf, sizeof(buf), "enter database password: ", false) < 0)
+            return stm_make_error(err, errno, "EVP_read_pw_string error");
+
+        globcred = xstrdup0(buf);
+        explicit_bzero(buf, sizeof(buf));
+
+        if (!globcred)
+            fprintf(stderr, "could not auth immediately (%s)", (*err)->msg);
+    }
+
     struct sigaction sa;
     sa.sa_flags = 0;
     sa.sa_handler = handle_signal;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGALRM, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
-
-    if (save_immediately) {
-        globcred = libstm_ask_password("enter database password: ", false, err);
-        if (!globcred)
-            fprintf(stderr, "could not auth immediately (%s)", (*err)->msg);
-    }
 
     rc = libstm_daemonize(pid_path, log_path, "STM CRED HELPER", err);
     if (rc == PARENT_RC) {
@@ -178,7 +186,6 @@ accept_client(void *data) {
             fflush(out);
         }
     }
-
 
     return NULL;
 }

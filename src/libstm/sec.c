@@ -11,7 +11,7 @@ char *
 libstm_ask_password(const char *prompt, int verify, libstm_error_t *err)
 {
     int rc;
-    char passwd[BUFSIZ - 1] = {0};
+    char passwd[BUFSIZ] = {0};
 
     rc = EVP_read_pw_string(passwd, sizeof(passwd), prompt, verify);
     if (rc < 0) {
@@ -19,14 +19,11 @@ libstm_ask_password(const char *prompt, int verify, libstm_error_t *err)
         return NULL;
     }
 
-    trim(passwd);
-
     if (!strlen(passwd)) {
         stm_make_error(err, 0, "empty password is not allowed");
         return NULL;
     }
 
-    explicit_bzero(passwd, strlen(passwd));
     return xstrdup0(passwd);
 }
 

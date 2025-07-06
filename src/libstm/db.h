@@ -33,14 +33,15 @@ enum
 
 struct libstm_server_s {
 	char *name;
-	const char *ip;
+	char *ip;
 	unsigned short port;
-	const char *proto;
-	const char *login;
+	char *proto;
+	char *login;
 	char *creds;
 	char *description;
 };
 typedef struct libstm_server_s libstm_server;
+void libstm_server_free(libstm_server *srv);
 
 sqlite3 *libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err);
 int libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err);

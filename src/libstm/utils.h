@@ -111,6 +111,15 @@ xmalloc (size_t size)
   return rc;
 }
 
+__attribute__ ((malloc)) static inline void *
+xmalloc0 (size_t size)
+{
+	void *res = calloc (1, size);
+	if (stm_unlikely (res == NULL))
+		stm_oom();
+	return res;	
+}
+
 __attribute__ ((malloc)) static inline char *
 xstrdup (const char *s) {
   char *_s = strdup(s);
