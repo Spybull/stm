@@ -152,4 +152,5 @@ int libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err);
 
 int libstm_unix_stream_listen(const char *path, libstm_error_t *err);
 int libstm_unix_stream_connect(const char *path, libstm_error_t *err);
+char *whoami(libstm_error_t *err);
 #endif

@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <linux/limits.h>
 #include <syslog.h>
-
+#include <pwd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -268,4 +268,24 @@ libstm_cache_creds(const char *password, libstm_error_t *err)
     fflush(out);
     return 0;
 
+}
+
+char *
+whoami(libstm_error_t *err) {
+    
+    struct passwd *pw;
+    uid_t NO_UID = -1;
+    uid_t uid;
+
+    errno = 0;
+    uid = geteuid();
+    
+    pw = uid == NO_UID && errno ? NULL : getpwuid(uid);
+    
+    if (!pw) {
+        stm_make_error(err, errno, "cannot find name for user ID %lu", (unsigned long int) uid);
+        return NULL;
+    }
+    
+    return xstrdup(pw->pw_name);
 }

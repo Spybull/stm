@@ -275,3 +275,36 @@ libstm_ssh_connect(libstm_server *srv, libstm_error_t *err)
     signal(SIGTERM, sigterm_exit);
     return new_ssh_session(session, srv, err);
 }
+
+
+
+ssh_user_data_t *
+libstm_parse_user_host(const char *user_host, libstm_error_t *err) {
+
+    char *puh = xstrdup(user_host);
+    char *user = NULL, *host = NULL;
+
+    char *p = strrchr(puh, '@');
+    if ( p == NULL ) { // if @ does not exists this is the host
+        host = puh;
+    } else {
+        *p++ = '\0';
+        user = xstrdup(puh);
+        if ( strlen(p) == 0 )
+            host = xstrdup("localhost");
+        else
+            host = xstrdup(p);
+    }
+    
+    if (user == NULL || *user == '\0') {
+        user = whoami(err);
+        if (stm_unlikely(user == NULL))
+            return NULL;
+    }
+
+    ssh_user_data_t *user_data = xmalloc0(sizeof(ssh_user_data_t));
+    user_data->login = user;
+    user_data->host = host;
+    
+    return user_data;
+}
