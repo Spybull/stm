@@ -38,7 +38,7 @@ int
 stm_server_subcmd_ssh(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
 {
     libstm_server ssh_arguments = {0};
-    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, 0, &ssh_arguments);
+    argp_parse(&argp, argc, argv, 0, 0, &ssh_arguments);
 
     glob_args->pdb = libstm_db_auth(NULL, NULL, err);
     if (!glob_args->pdb)
@@ -47,6 +47,6 @@ stm_server_subcmd_ssh(stm_glob_args *glob_args stm_unused, int argc, char **argv
     libstm_server *srv = libstm_db_server_get(glob_args->pdb, ssh_arguments.name, err);
     if (srv == NULL)
         return STM_GENERIC_ERROR;
-    
+
     return libstm_ssh_connect(srv, err);
 }

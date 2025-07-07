@@ -17,7 +17,7 @@ CREATE TABLE [SERVERS] (                                                \
 	creds       TEXT,                                                   \
 	description TEXT,                                                   \
 	created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,                     \
-	UNIQUE(ip, port, login));                                           \
+	UNIQUE(ip, port, login, name));                                     \
 "
 
 enum

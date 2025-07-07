@@ -20,13 +20,13 @@ enum {
 };
 
 static struct argp_option options[] = {
-    { "ip",            SERVER_IPADDR,      "STRING", 0,                   "IPv4/IPv6 address",             0},
-    { "port",          SERVER_PORT,        "NUMBER", 0,                   "TCP port number (default: 22)", 0},
-    { "creds",         SERVER_CREDS,       "STRING", OPTION_ARG_OPTIONAL, "Credentials",                   0},
-    { "protocol",      SERVER_PROTO,       "STRING", OPTION_ARG_OPTIONAL, "Protocol (default: tcp)",       0},
+    { "ip",            SERVER_IPADDR,      "STRING", 0, "IPv4/IPv6 address",             0},
+    { "port",          SERVER_PORT,        "NUMBER", 0, "TCP port number (default: 22)", 0},
+    { "creds",         SERVER_CREDS,       "STRING", 0, "Credentials",                   0},
+    { "protocol",      SERVER_PROTO,       "STRING", 0, "Protocol (default: tcp)",       0},
     { "login",         SERVER_LOGIN,       "STRING", 0, "Login",                         0},
-    { "description",   SERVER_DESCRIPTION, "STRING", OPTION_ARG_OPTIONAL, "Description",                   0},
-    { "interactive",   INTERACTIVE_INPUT,   0,       0,                   "Enter creds interactively",     0},
+    { "description",   SERVER_DESCRIPTION, "STRING", 0, "Description",                   0},
+    { "interactive",   INTERACTIVE_INPUT,   0,       0, "Enter creds interactively",     0},
     { 0, }
 };
 
@@ -46,9 +46,7 @@ parse_opt(int key, char *arg, struct argp_state *state) {
         break;
 
         case SERVER_CREDS:
-            args->creds = xstrdup(arg);
-            /* TODO: need some sec tests */
-            explicit_bzero(arg, strlen(arg)); // or libstm_secure_memzero 
+            args->creds = arg;
         break;
 
         case SERVER_PROTO:
@@ -84,8 +82,13 @@ static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
 int
 stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
 {
-    libstm_server server = { .port = 22, .proto = "tcp", .login = "root" };
-    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, 0, &server);
+    libstm_server server = {
+        .port = 22,
+        .proto = "tcp",
+        .login = "root"
+    };
+
+    argp_parse(&argp, argc, argv, 0, 0, &server);
 
     if (!server.ip)
         return stm_make_error(err, 0, "ip address is required");

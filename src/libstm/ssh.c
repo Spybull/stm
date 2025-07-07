@@ -103,15 +103,25 @@ ssh_console_auth(ssh_session session, const char *password)
 
     method = ssh_userauth_list(session, NULL);
     int retries = 5;
-    while (rc != SSH_AUTH_SUCCESS && retries) {
-        if (method & SSH_AUTH_METHOD_PASSWORD) {
+
+    while (rc != SSH_AUTH_SUCCESS && retries--)
+    {
+        if ( (method & SSH_AUTH_METHOD_PASSWORD) && password && *password ) {
             rc = ssh_userauth_password(session, NULL, password);
-            if (rc == SSH_AUTH_ERROR)
-                return rc;
-            else if (rc == SSH_AUTH_SUCCESS)
-                break;
+        } else if (method & SSH_AUTH_METHOD_PUBLICKEY) {
+            rc = ssh_userauth_publickey_auto(session, NULL, NULL);
+            //return SSH_AUTH_ERROR; // see man ssh_config (by default ConnectionAttempts=1)
+        } else {
+            fprintf(stderr, "No supported authentication method available\n");
+            return SSH_AUTH_DENIED;
         }
-        --retries;
+
+        if (rc == SSH_AUTH_SUCCESS)
+            break;
+
+        if (rc == SSH_AUTH_ERROR || rc == SSH_AUTH_DENIED)
+            return rc;
+
     }
 
     banner = ssh_get_issue_banner(session);
@@ -174,9 +184,6 @@ select_loop(ssh_session session,ssh_channel channel)
     ssh_event_free(event);
     ssh_channel_free(channel);
 }
-
-
-
 
 
 static int
@@ -253,7 +260,7 @@ new_ssh_session(ssh_session session, libstm_server *srv, libstm_error_t *err)
 
     int auth = ssh_console_auth(session, srv->creds);
     if (auth != SSH_AUTH_SUCCESS)
-        return stm_make_error(err, 0, "failed to auth with password (auth error)");
+        return stm_make_error(err, 0, "%s", ssh_get_error(session));
 
     return shell(session);
 

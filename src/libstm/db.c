@@ -140,8 +140,7 @@ add_server(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *er
     if (rc != SQLITE_DONE) {
         sqlite3_finalize(stmt);
         if (rc == SQLITE_CONSTRAINT)
-            return stm_make_error(err, 0, "failed to add server `%s`: %s",
-                                    srv->name, "already exists");
+            return stm_make_error(err, 0, "failed to add server, already exists");
 
         return stm_make_error(err, 0, "failed to create server `%s`: %s",
                                  srv->name, sqlite3_errmsg(pdb));
@@ -210,7 +209,7 @@ server_get_cb(void *param, int argc, char **argv, char **colname)
                     srv->name = xstrdup(argv[i]);
             break;
             case IP:          srv->ip          = !argv[i] ? NULL : xstrdup(argv[i]); break;
-            case PORT:        srv->port        = atoi(argv[i]);    break;
+            case PORT:        srv->port        = atoi(argv[i]);                      break;
             case PROTO:       srv->proto       = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case LOGIN:       srv->login       = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case CREDS:       srv->creds       = !argv[i] ? NULL : xstrdup(argv[i]); break;
