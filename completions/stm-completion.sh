@@ -45,7 +45,7 @@ _stm()
             ;;
         creds)
             if [[ $cword -eq 2 ]]; then
-                COMPREPLY=( $(compgen -W "store" -- "$cur") )
+                COMPREPLY=( $(compgen -W "store status kill" -- "$cur") )
                 return 0
             fi
             ;;
