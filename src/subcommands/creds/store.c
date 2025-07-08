@@ -37,7 +37,8 @@ handle_signal(int signal)
 static void
 sigterm_handler(int signo stm_unused)
 {
-    return;
+    if (globcred)
+        explicit_bzero(globcred, strlen(globcred));
 }
 
 static struct argp_option options[] = {
@@ -53,8 +54,11 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
             save_immediately = true;
         break;
 
+        case ARGP_KEY_ARG:
+            return ARGP_ERR_UNKNOWN;
+
         default:
-            break;
+            return ARGP_ERR_UNKNOWN;
     }
 
     return 0;
