@@ -34,6 +34,7 @@ set(SRCS
     src/subcommands/server/del.c
     src/subcommands/server/list.c
     src/subcommands/server/ssh.c
+    src/subcommands/server/find.c
     src/stm.c)
 
 target_link_libraries(stm PRIVATE libstm)

@@ -4,6 +4,36 @@
 #include <jansson.h>
 #include "utils.h"
 
+static json_t *
+json_string_or_json_null(const char *val)
+{
+    return val == NULL  ? json_null() : json_string(val);
+}
+
+
+int
+stmlib_fmt_print_srv_as_json(libstm_server *srv, libstm_error_t *err)
+{
+    json_t *row = json_object();
+    json_object_set_new(row, "name", json_string_or_json_null(srv->name));
+    json_object_set_new(row, "ip", json_string_or_json_null(srv->ip));
+    json_object_set_new(row, "port", json_integer(srv->port));
+    json_object_set_new(row, "proto", json_string_or_json_null(srv->proto));
+    json_object_set_new(row, "login", json_string_or_json_null(srv->login));
+    json_object_set_new(row, "creds", json_string_or_json_null(srv->creds));
+    json_object_set_new(row, "description", json_string_or_json_null(srv->description));
+
+    char *out = json_dumps(row, JSON_INDENT(2));
+    if (stm_unlikely(out == NULL))
+        return stm_make_error(err, 0, "failed in `json_dumps`");
+    printf("%s\n", out);
+
+
+    free(out);
+    json_decref(row);
+    return 0;
+}
+
 int
 stmlib_fmt_print_json(sqlite3 *pdb, const char *query, libstm_error_t *err)
 {
