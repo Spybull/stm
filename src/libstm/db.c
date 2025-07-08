@@ -3,7 +3,6 @@
 #include "utils.h"
 #include "config.h"
 #include "queries.h"
-#include <stdbool.h>
 
 static int
 make_dummy_query(sqlite3 *pdb, libstm_error_t *err) {
@@ -108,6 +107,28 @@ libstm_db_init(const char *filename, const char *pKey, int nKey, const char *sch
 }
 
 int
+libstm_db_create(const char *filename, const char *scheme, libstm_error_t *err)
+{
+    int rc;
+    sqlite3 *pdb;
+
+    rc = libstm_create_file(filename, 0666, err);
+    if (stm_unlikely(rc < 0))
+        return rc;
+
+    rc = sqlite3_open_v2(filename, &pdb, SQLITE_OPEN_READWRITE, NULL);
+    if (rc != SQLITE_OK)
+        return stm_make_error(err, errno, "failed to open database `%s`", filename);
+
+    rc = sqlite3_exec(pdb, scheme, NULL, NULL, NULL);
+    if (rc != SQLITE_OK)
+        return stm_make_error(err, 0, "failed to create default servers metadata scheme, %s", sqlite3_errmsg(pdb));
+
+    sqlite3_close_v2(pdb);
+    return 0;
+}
+
+int
 libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err)
 {
     int rc;
@@ -148,6 +169,36 @@ add_server(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *er
     
     sqlite3_finalize(stmt);
     return 0;
+}
+
+static int
+add_server_metadata(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *err)
+{
+    int rc = 0;
+    sqlite3_stmt *stmt = NULL;
+    rc = sqlite3_prepare_v2(pdb, sql, -1, &stmt, NULL);
+    if (stm_unlikely(rc != SQLITE_OK))
+        return stm_make_error(err, sqlite3_errcode(pdb), "failed to prepare: %s", sqlite3_errmsg(pdb));
+
+    bind_text_by_str(stmt, srv->name, ":name", true);
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+        sqlite3_finalize(stmt);
+        if (rc == SQLITE_CONSTRAINT)
+            return stm_make_error(err, 0, "failed to add server, already exists");
+
+        return stm_make_error(err, 0, "failed to create server `%s`: %s",
+                                 srv->name, sqlite3_errmsg(pdb));
+    }
+
+    sqlite3_finalize(stmt);
+    return 0;
+}
+
+int
+libstm_db_server_add_metadata(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err)
+{
+    return add_server_metadata(pdb, ADD_SERVER_META, srv, err);
 }
 
 int

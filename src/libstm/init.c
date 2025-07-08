@@ -22,8 +22,14 @@ libstm_init(libstm_error_t *err)
         return STM_GENERIC_ERROR;
 
     rc = libstm_db_init(STM_DATABASE_NAME, passwd, strlen(passwd), NULL, err);
-    if (rc < 0)
+    if (rc < 0) {
         unlink(STM_DATABASE_NAME);
+        return rc;
+    }
     
+    rc = libstm_db_create(STM_DATABASE_META, CREATE_DRYDB_META, err);
+    if (rc < 0)
+        unlink(STM_DATABASE_META);
+
     return rc;
 }

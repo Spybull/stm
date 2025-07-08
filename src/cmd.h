@@ -7,7 +7,7 @@
 struct stm_global_arguments {
     int argc;
     char **argv;
-    sqlite3 *pdb;
+    sqlite3 *pdb, *mpdb;
 };
 typedef struct stm_global_arguments stm_glob_args;
 

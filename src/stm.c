@@ -89,6 +89,8 @@ int main(int argc, char **argv)
     rc = curr_cmd->handler(&arguments, argc - farg, argv + farg, &err);
     if (!arguments.pdb)
         sqlite3_close_v2(arguments.pdb);
+    if (!arguments.mpdb)
+        sqlite3_close_v2(arguments.mpdb);
 
 exit_fail:
     if (rc < 0 && err)

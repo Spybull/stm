@@ -2,6 +2,7 @@
 #define LIBSTM_DB_H
 #include "error.h"
 #include <sqlite3.h>
+#include <stdbool.h>
 
 typedef int (*sqlite_cb)(void *, int, char *[], char *[]);
 
@@ -18,6 +19,13 @@ CREATE TABLE [SERVERS] (                                                \
 	description TEXT,                                                   \
 	created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,                     \
 	UNIQUE(ip, port, login, name));                                     \
+"
+
+#define CREATE_DRYDB_META							\
+"													\
+CREATE TABLE [SERVERS_META] (						\
+	id    INTEGER PRIMARY KEY,						\
+	name  TEXT NOT NULL CHECK (name != '') UNIQUE);	\
 "
 
 enum
@@ -44,9 +52,11 @@ typedef struct libstm_server_s libstm_server;
 void libstm_server_free(libstm_server *srv);
 
 sqlite3 *libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err);
+int libstm_db_create(const char *filename, const char *scheme, libstm_error_t *err);
 int libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err);
 int libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
 
+int libstm_db_server_add_metadata(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
 int libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
 int libstm_db_server_del(sqlite3 *pdb, const char *name, libstm_error_t *err);
 libstm_server *libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err);

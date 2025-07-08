@@ -6,6 +6,7 @@
 #include "libstm/utils.h"
 #include "libstm/db.h"
 #include "libstm/sec.h"
+#include "libstm/config.h"
 #include "server.h"
 
 static bool interactive = false;
@@ -86,6 +87,7 @@ static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
 int
 stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
 {
+    int rc = 0;
     libstm_server server = {
         .port = 22,
         .proto = "tcp",
@@ -109,5 +111,16 @@ stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv
 
     if (!server.creds)
         free(server.creds);
-    return libstm_db_server_add(glob_args->pdb, &server, err);
+    
+    glob_args->mpdb = libstm_db_open(STM_DATABASE_META, NULL, err);
+    if (stm_unlikely(glob_args->mpdb == NULL))
+        return STM_GENERIC_ERROR;
+
+    rc = libstm_db_server_add(glob_args->pdb, &server, err);
+    if (rc < 0)
+        return  STM_GENERIC_ERROR;
+    rc = libstm_db_server_add_metadata(glob_args->mpdb, &server, err);
+    if (rc < 0)
+        return  STM_GENERIC_ERROR;
+    return 0;
 }
