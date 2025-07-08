@@ -3,6 +3,8 @@
 
 #include "libstm/utils.h"
 #include "libstm/sec.h"
+#include "libstm/db.h"
+#include "libstm/config.h"
 
 static struct argp_option options[] = { { 0 } };
 static error_t
@@ -26,12 +28,21 @@ static struct argp argp = { options, parse_opt, NULL, doc, NULL, NULL, NULL };
 int
 stm_server_subcmd_del(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err stm_unused)
 {
-    int farg = 0;
+    int rc = 0, farg = 0;
     argp_parse(&argp, argc, argv, 0, &farg, NULL);
 
     glob_args->pdb = libstm_db_auth(NULL, NULL, err);
     if (!glob_args->pdb)
         return STM_GENERIC_ERROR;
 
-    return libstm_db_server_del(glob_args->pdb, argv[farg], err);
+    glob_args->mpdb = libstm_db_open(STM_DATABASE_META, NULL, err);
+    if (stm_unlikely(glob_args->mpdb == NULL))
+        return STM_GENERIC_ERROR;
+
+    rc = libstm_db_server_del(glob_args->pdb, argv[farg], err);
+    if (rc < 0)
+        return STM_GENERIC_ERROR;
+    
+    libstm_db_server_del(glob_args->mpdb, argv[farg], err);
+    return 0;
 }
