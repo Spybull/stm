@@ -210,7 +210,6 @@ fail:
 int
 libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err)
 {
-    char un_path[108];
     cleanup_close int sd = -1;
     cleanup_close int sd2 = -1;
     cleanup_file FILE *in = NULL;
@@ -218,7 +217,7 @@ libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err)
 
     sd = libstm_unix_stream_connect(STM_CRED_SOCK_PATH, err);
     if (stm_unlikely(sd < 0))
-        return stm_make_error(err, errno, "failed to connect to unix socket `%s`", un_path);
+        return stm_make_error(err, errno, "failed to connect to unix socket");
 
     sd2 = dup(sd);
     if (stm_unlikely(sd2 < 0))
@@ -246,6 +245,35 @@ libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err)
     explicit_bzero(password, strlen(password));
     return 1;
 
+}
+
+int
+libstm_unix_stream_get_rtime(libstm_error_t *err)
+{
+    cleanup_close int sd = -1;
+    cleanup_close int sd2 = -1;
+    cleanup_file FILE *in = NULL;
+    cleanup_file FILE *out = NULL;
+
+    sd = libstm_unix_stream_connect(STM_CRED_SOCK_PATH, err);
+    if (stm_unlikely(sd < 0))
+        return stm_make_error(err, errno, "failed to connect to unix socket");
+
+    sd2 = dup(sd);
+    if (stm_unlikely(sd2 < 0))
+        return stm_make_error(err, errno, "failed to duplicate descriptor");
+    
+    in  = xfdopen(sd, "r");
+    out = xfdopen(sd2, "w");
+
+    fprintf(out, "gettime\n");
+    fflush(out);
+
+    unsigned int rtime = 0;
+    if (fscanf(in, "%u", &rtime) != 1)
+        return stm_make_error(err, 0, "failed to parse response");
+
+    return rtime;
 }
 
 int
@@ -288,4 +316,29 @@ whoami(libstm_error_t *err) {
     }
     
     return xstrdup(pw->pw_name);
+}
+
+pid_t
+read_pid_file(const char *lock_file, libstm_error_t *err) {
+    
+    char buf[16] = {0};
+    cleanup_close int fd = 0;
+
+    fd = open(lock_file, O_RDONLY);
+    if (fd < 0) {
+        if (errno == ENOENT) {
+            return stm_make_error(err, 0, "stm creds daemon is not running");
+        }
+
+        return stm_make_error(err, errno, "failed to open %s", lock_file);
+    }
+
+    ssize_t nr = 0;
+    if ( ( nr = read(fd, buf, sizeof(buf))) < 0 )
+        return stm_make_error(err, errno, "failed to read %s", lock_file);
+
+    if (nr == 0)
+        return stm_make_error(err, 0, "no such process pid in %s", lock_file);
+
+    return (pid_t)atoi(buf);
 }
