@@ -34,6 +34,12 @@ handle_signal(int signal)
     exit(EXIT_SUCCESS);
 }
 
+static void
+sigterm_handler(int signo stm_unused)
+{
+    return;
+}
+
 static struct argp_option options[] = {
     { "now", 'n', 0, 0, "save creds immediately", 0},
     { 0, }
@@ -88,7 +94,7 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     sa.sa_handler = handle_signal;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGALRM, &sa, NULL);
-    sigaction(SIGTERM, &sa, NULL);
+    signal(SIGTERM, sigterm_handler);
 
     rc = libstm_daemonize(pid_path, log_path, "STM CRED HELPER", err);
     if (rc == PARENT_RC) {

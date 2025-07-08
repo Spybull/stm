@@ -28,6 +28,7 @@ set(SRCS
     src/creds.c
     src/subcommands/creds/store.c
     src/subcommands/creds/status.c
+    src/subcommands/creds/kill.c
     src/server.c
     src/subcommands/server/add.c
     src/subcommands/server/del.c

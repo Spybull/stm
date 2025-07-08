@@ -4,12 +4,14 @@
 #include "libstm/utils.h"
 #include "subcommands/creds/store.h"
 #include "subcommands/creds/status.h"
+#include "subcommands/creds/kill.h"
 
 static stm_glob_args creds_args;
-enum { CREDS_STORE = 1001, CREDS_STATUS };
+enum { CREDS_STORE = 1001, CREDS_STATUS, CREDS_KILL };
 static struct commands_s sub_cmds[] = {
     { CREDS_STORE,   "store",  stm_creds_subcmd_store  },
     { CREDS_STATUS,  "status", stm_creds_subcmd_status },
+    { CREDS_KILL,    "kill",   stm_creds_subcmd_kill   },
     { 0, }
 };
 static error_t
@@ -28,7 +30,8 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
 
 static char doc[] = "\nSUB COMMANDS:\n"
                     "\tstore  - store database creds\n"
-                    "\tstatus - get daemon status\n";
+                    "\tstatus - get daemon status\n"
+                    "\tkill   - kill creds daemon\n";
 static char args_doc[] = "name";
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
