@@ -14,8 +14,8 @@ jobs:
           - fedora:42
     container:
       image: ${{ matrix.distro }}
-    name: Build on ${{ matrix.distro }}
 
+    name: Build on ${{ matrix.distro }}
     steps:
       - name: Sanitize distro name
         run: echo "DISTRO_NAME=${{ matrix.distro }}" | sed 's/:/-/' >> $GITHUB_ENV
@@ -39,7 +39,8 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           rpmdev-setuptree
           cp rpm/stm.spec ~/rpmbuild/SPECS/
-          git archive --format=tar.gz --prefix=stm-${VERSION}/ -o ~/rpmbuild/SOURCES/stm-${VERSION}.tar.gz HEAD
+          git archive --format=tar.gz --prefix=stm-${VERSION}/ -o ~/rpmbuild/SOURCES/stm-${VERSION}-source.tar.gz HEAD
+          git archive --format=zip --prefix=stm-${VERSION}/ -o ~/rpmbuild/SOURCES/stm-${VERSION}-source.zip HEAD
 
       - name: Build RPM
         run: |
@@ -53,3 +54,26 @@ jobs:
           path: |
             ~/rpmbuild/RPMS/**/*.rpm
             ~/rpmbuild/SRPMS/*.rpm
+            ~/rpmbuild/SOURCES/stm-${VERSION}-source.tar.gz
+            ~/rpmbuild/SOURCES/stm-${VERSION}-source.zip
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download rpm artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rpm-fedora-42
+          path: dist/
+
+      - name: Release and upload assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.rpm
+            dist/*.tar.gz
+            dist/*.zip
+      
