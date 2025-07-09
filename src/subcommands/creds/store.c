@@ -76,7 +76,8 @@ stm_creds_subcmd_store(stm_glob_args *glob_args, int argc, char **argv, libstm_e
         return 0;
     }
 
-    chdir(glob_args->xdg_runtime_path);
+    if (chdir(glob_args->xdg_runtime_path) < 0)
+        stm_make_error(err, errno, "failed to change directory `%s` ", glob_args->xdg_runtime_path);
     
     rc = libstm_is_daemon_active(STMD_CRED_PID_FILE, err);
     if (rc > 0) {
@@ -116,7 +117,11 @@ stm_creds_subcmd_store(stm_glob_args *glob_args, int argc, char **argv, libstm_e
     }
 
     syslog(UINF, "starting stm credential store daemon");
-    chdir(glob_args->xdg_runtime_path);
+    if (chdir(glob_args->xdg_runtime_path) < 0) {
+        syslog(UERR, "failed to change directory from daemon");
+        closelog();
+        return STM_GENERIC_ERROR;
+    }
     
     int sd = -1; 
     struct sigaction sa;

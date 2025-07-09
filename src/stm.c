@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         goto exit_fail;
 
     if (chdir(stm_workdir) < 0)
-        libstm_fail_with_error(errno, "failed to change directory `%s` ", STM_SYSDIR_PATH);
+        libstm_fail_with_error(errno, "failed to change directory `%s` ", stm_workdir);
 
     char stmd_creds_pid_path[PATH_MAX],
          stmd_creds_sock_path[PATH_MAX];

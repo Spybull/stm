@@ -8,15 +8,12 @@
 #define FORMAT_UNKNOWN (1 << 4)
 
 #ifdef __linux__
-    #define STM_SYSDIR_PATH   "/var/lib/stm"
-    #define STM_LOG_FILE      "/var/log/stm.log"
-
     #define STM_DIR_NAME "stm"
-    #define STMD_CRED_PID_FILE  "stmd.pid"
-    #define STMD_CRED_SOCK_FILE "stmd.sock"
-
     #define STM_DATABASE_NAME "stm.db"
     #define STM_DATABASE_META "stm_meta.db"
+
+    #define STMD_CRED_PID_FILE  "stmd.pid"
+    #define STMD_CRED_SOCK_FILE "stmd.sock"
 #elif _WIN32
 #else
     #error unsupported platform
