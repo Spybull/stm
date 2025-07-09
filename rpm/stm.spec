@@ -8,7 +8,7 @@ URL:		https://github.com/Spybull/stm/
 Source0:	%{name}-%{version}.tar.gz
 
 BuildRequires: gcc, make, cmake
-BuildRequires: pkgconfig(sqlcipher), pkgconfig(openssl), pkgconfig(jansson), pkgconfig(libssh)
+BuildRequires: pkgconfig(sqlcipher), pkgconfig(openssl), pkgconfig(jansson), libssh-devel
 
 Requires: sqlcipher, openssl, jansson, libssh
 
@@ -32,6 +32,7 @@ Simple Trash Manager
 %changelog
 * Wed Jul 9 2025 VB <spybull@proton.me> - 1.0-3
 - Remove system directories for credential daemon
+- Add libssh-devel and libssh in sepc
 
 * Tue Jul 1 2025 VB <spybull@proton.me> - 1.0-2
 - Add jansson library
