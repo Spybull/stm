@@ -54,7 +54,7 @@ jobs:
         with:
           name: ${{ env.DISTRO_NAME }}
           path: |
-            ~/rpmbuild/RPMS/**/*.rpm
+            ~/rpmbuild/RPMS/x86_64/*.rpm
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -72,5 +72,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/RPMS/**/*.rpm
+            dist/*.rpm
       
