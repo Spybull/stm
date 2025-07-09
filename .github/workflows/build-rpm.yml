@@ -16,10 +16,10 @@ jobs:
       image: ${{ matrix.distro }}
     name: Build on ${{ matrix.distro }}
 
-    env:
-      DISTRO_NAME: ${{ matrix.distro.replace(':', '-') }}
-
     steps:
+      - name: Sanitize distro name
+        run: echo "DISTRO_NAME=${{ matrix.distro }}" | sed 's/:/-/' >> $GITHUB_ENV
+
       - name: Install build dependencies
         run: |
           dnf install -y rpm-build rpmdevtools git make cmake gcc tar gzip \
