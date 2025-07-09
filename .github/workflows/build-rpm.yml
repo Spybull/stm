@@ -16,6 +16,9 @@ jobs:
       image: ${{ matrix.distro }}
     name: Build on ${{ matrix.distro }}
 
+    env:
+      DISTRO_NAME: ${{ matrix.distro.replace(':', '-') }}
+
     steps:
       - name: Install build dependencies
         run: |
@@ -46,7 +49,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rpm-${{ matrix.distro }}
+          name: ${{ env.DISTRO_NAME }}
           path: |
             ~/rpmbuild/RPMS/**/*.rpm
             ~/rpmbuild/SRPMS/*.rpm
