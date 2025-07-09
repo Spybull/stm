@@ -48,5 +48,5 @@ jobs:
         with:
           name: rpm-${{ matrix.distro }}
           path: |
-            /root/rpmbuild/RPMS/**/*.rpm
-            /root/rpmbuild/SRPMS/*.rpm
+            ~/rpmbuild/RPMS/**/*.rpm
+            ~/rpmbuild/SRPMS/*.rpm
