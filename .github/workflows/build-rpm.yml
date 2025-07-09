@@ -42,11 +42,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           rpmdev-setuptree
           cp rpm/stm.spec "$HOME/rpmbuild/SPECS/"
-
-          mkdir $HOME/artifacts
-          git archive --format=tar.gz --prefix=stm-${VERSION}/ -o "$HOME/artifacts/stm-${VERSION}.tar.gz" HEAD
-          git archive --format=zip --prefix=stm-${VERSION}/ -o "$HOME/artifacts/stm-${VERSION}.zip" HEAD
-          cp $HOME/artifacts/stm-${VERSION}.tar.gz $HOME/rpmbuild/SOURCES/
+          git archive --format=tar.gz --prefix=stm-${VERSION}/ -o "$HOME/rpmbuild/SOURCES/stm-${VERSION}.tar.gz" HEAD
 
       - name: Build RPM
         run: |
@@ -59,7 +55,6 @@ jobs:
           name: ${{ env.DISTRO_NAME }}
           path: |
             ~/rpmbuild/RPMS/**/*.rpm
-            ~/artifacts/*
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -78,5 +73,4 @@ jobs:
         with:
           files: |
             dist/RPMS/**/*.rpm
-            dist/SRPMS/*.rpm
       
