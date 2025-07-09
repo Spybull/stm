@@ -19,9 +19,16 @@
 #include "libstm/config.h"
 #include "libstm/sec.h"
 
+#define MIN_STORE_MINS 1
+#define MAX_STORE_MINS 1440
+#define DEF_STORE_MINS 60
+
 static bool save_immediately = false;
+static unsigned long timeout = DEF_STORE_MINS;
 static char *globcred = NULL;
 static void *accept_client(void *);
+
+
 
 static void
 handle_signal(int signal)
@@ -40,7 +47,8 @@ handle_signal(int signal)
 }
 
 static struct argp_option options[] = {
-    { "now", 'n', 0, 0, "save creds immediately", 0},
+    { "now",     'n', 0,         0, "save creds immediately", 0 },
+    { "timeout", 't', "MINUTES", 0, "daemon live time",       0 },
     { 0, }
 };
 static error_t
@@ -50,6 +58,18 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
     {
         case 'n':
             save_immediately = true;
+        break;
+
+        case 't':
+            char *endptr;
+            timeout = strtoul(arg, &endptr, 10);
+            if (*endptr != '\0')
+                return ARGP_ERR_UNKNOWN;
+
+            if (timeout > MAX_STORE_MINS)
+                timeout = MAX_STORE_MINS;
+            else if (timeout < MIN_STORE_MINS)
+                timeout = MIN_STORE_MINS;
         break;
 
         case ARGP_KEY_ARG:
@@ -79,13 +99,13 @@ stm_creds_subcmd_store(stm_glob_args *glob_args, int argc, char **argv, libstm_e
     if (chdir(glob_args->xdg_runtime_path) < 0)
         stm_make_error(err, errno, "failed to change directory `%s` ", glob_args->xdg_runtime_path);
     
+    argp_parse(&argp, argc, argv, 0, 0, 0);
+
     rc = libstm_is_daemon_active(STMD_CRED_PID_FILE, err);
     if (rc > 0) {
         fprintf(stdout, "stm credential daemon already running\n");
         return 0;
     }
-
-    argp_parse(&argp, argc, argv, 0, 0, 0);
 
     if (save_immediately)
     {
@@ -155,7 +175,7 @@ stm_creds_subcmd_store(stm_glob_args *glob_args, int argc, char **argv, libstm_e
         exit(EXIT_FAILURE);
     }
 
-    alarm(60 * 60); //60 mins
+    alarm(60 * timeout);
 
     while(1)
     {
