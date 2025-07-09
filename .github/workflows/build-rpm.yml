@@ -38,10 +38,9 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           rpmdev-setuptree
-          cp rpm/stm.spec ~/rpmbuild/SPECS/
+          cp rpm/stm.spec "$HOME/rpmbuild/SPECS/"
           git archive --format=tar.gz --prefix=stm-${VERSION}/ -o ~/rpmbuild/SOURCES/stm-${VERSION}.tar.gz HEAD
-          git archive --format=tar.gz --prefix=stm-${VERSION}/ -o ~/rpmbuild/SOURCES/stm-${VERSION}-source.tar.gz HEAD
-          git archive --format=zip --prefix=stm-${VERSION}/ -o ~/rpmbuild/SOURCES/stm-${VERSION}-source.zip HEAD
+          git archive --format=zip --prefix=stm-${VERSION}/ -o ~/rpmbuild/SOURCES/stm-${VERSION}.zip HEAD
 
       - name: Build RPM
         run: |
@@ -53,10 +52,10 @@ jobs:
         with:
           name: ${{ env.DISTRO_NAME }}
           path: |
-            ~/rpmbuild/RPMS/**/*.rpm
-            ~/rpmbuild/SRPMS/*.rpm
-            ~/rpmbuild/SOURCES/stm-${VERSION}-source.tar.gz
-            ~/rpmbuild/SOURCES/stm-${VERSION}-source.zip
+            $HOME/rpmbuild/RPMS/**/*.rpm
+            $HOME/rpmbuild/SRPMS/*.rpm
+            $HOME/rpmbuild/SOURCES/stm-${VERSION}.tar.gz
+            $HOME/rpmbuild/SOURCES/stm-${VERSION}.zip
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -74,7 +73,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/*.rpm
-            dist/*.tar.gz
-            dist/*.zip
+            dist/RPMS/**/*.rpm
+            dist/SRPMS/*.rpm
+            dist/SOURCES/stm-source.*
       
