@@ -49,9 +49,7 @@
 #define FNV_OFFSET 2166136261
 #define FNV_PRIME 16777619
 
-#define STM_CRED_PID_PATH  "/var/lib/stm/cred.pid"
-#define STM_CRED_LOG_PATH  "/var/lib/stm/cred.log"
-#define STM_CRED_SOCK_PATH "/var/lib/stm/cred.sock"
+
 #define PARENT_RC 666
 struct stmcred_s {
    char *password;
@@ -145,14 +143,14 @@ FILE *xfdopen(int fd, const char *mode);
 void trim(char *line);
 int libstm_get_workdir(char *out, libstm_error_t *err);
 
-int libstm_daemonize(const char *pid_path, const char *log_path, const char *logname, libstm_error_t *err);
+int libstm_daemonize(const char *logname, libstm_error_t *err);
 int libstm_is_daemon_active(const char *pid_path, libstm_error_t *err);
-int libstm_cache_creds(const char *password, libstm_error_t *err);
-int libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err);
+int libstm_cache_creds(const char *password, const char *daemon_socket, libstm_error_t *err);
+int libstm_is_password_cached(smtcred_t *creds, const char *daemon_socket, libstm_error_t *err);
 
 int libstm_unix_stream_listen(const char *path, libstm_error_t *err);
 int libstm_unix_stream_connect(const char *path, libstm_error_t *err);
-int libstm_unix_stream_get_rtime(libstm_error_t *err);
+int libstm_unix_stream_get_rtime(const char *sock_path, libstm_error_t *err);
 pid_t read_pid_file(const char *lock_file, libstm_error_t *err);
 char *whoami(libstm_error_t *err);
 #endif

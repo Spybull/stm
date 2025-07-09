@@ -8,6 +8,11 @@ struct stm_global_arguments {
     int argc;
     char **argv;
     sqlite3 *pdb, *mpdb;
+    char *xdg_runtime_path;
+    char *xdg_user_home_path;
+
+    char *stmd_creds_pid_path,
+         *stmd_creds_sock_path;
 };
 typedef struct stm_global_arguments stm_glob_args;
 

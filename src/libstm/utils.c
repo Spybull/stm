@@ -61,77 +61,51 @@ libstm_get_workdir(char *out, libstm_error_t *err)
 }
 
 int
-libstm_daemonize(const char *pid_path, const char *log_path, const char *logname, libstm_error_t *err)
+libstm_daemonize(const char *logname, libstm_error_t *err)
 {
-    int rc;
     openlog(logname, LOG_PID, LOG_USER);
-
-    /* check .pid file exists for locks */
-    rc = libstm_path_exists(pid_path, err);
-    if (rc < 0)
-        return rc;
-
-    if (rc == 0) {
-        if (libstm_create_file(pid_path, 0666, err) < 0 )
-            libstm_fail_with_error(errno, "failed to create %s", pid_path);
-    }
-
-    rc = libstm_path_exists(log_path, err);
-    if (rc < 0) return rc;
-
-    if ( rc == 0 )
-        if (libstm_create_file(log_path, 0666, err) < 0 )
-            libstm_fail_with_error(errno, "failed to create %s", log_path);
-
     int fd, maxfd;
     
     pid_t np = fork();
     if (stm_likely(np > 0))
         return PARENT_RC;
-    else if (stm_unlikely(np == -1))
-        return -1;
+    else if (stm_unlikely(np == -1)) {
+        syslog(UERR, "failed in first fork)");
+        return stm_make_error(err, errno, "could not create daemon process");
+    }
 
-    if (stm_unlikely(setsid() == -1))
-        return -2;
+    if (stm_unlikely(setsid() == -1)) {
+        syslog(UERR, "failed to setsid()");
+        return STM_GENERIC_ERROR;
+    }
 
     np = fork();
     if (stm_likely(np > 0))
         return PARENT_RC;
-    else if (stm_unlikely(np == -1))
-        return -3;
+    else if (stm_unlikely(np == -1)) {
+        syslog(UERR, "failed in second fork)");
+        return STM_GENERIC_ERROR;
+    }
 
     umask(0);
-    if ( chdir("/") < 0 )
-        return -4;
+    if ( chdir("/") < 0 ) {
+        syslog(UERR, "failed to chdir in daemon process)");
+        return STM_GENERIC_ERROR;
+    }
 
     maxfd = sysconf(_SC_OPEN_MAX);
     for(int fd = 0; fd < maxfd; ++fd)
         close(fd);
 
     fd = open("/dev/null", O_RDWR);
-    if (stm_unlikely(fd < 0))
-        return -5;
+    if (stm_unlikely(fd < 0)) {
+        syslog(UERR, "failed to open /dev/null in daemon process)");
+        return STM_GENERIC_ERROR;
+    }
 
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
-
-    /* in daemon */
-    pid_t pid = getpid();
-    cleanup_close int lock_fd = -1;
-
-    lock_fd = open(pid_path, O_WRONLY);
-    if (stm_unlikely(lock_fd < 0)) {
-        syslog(LOG_USER | LOG_ERR, "failed to open file `%s`: `%s`", pid_path, strerror(errno));
-        return -6;
-    }
-
-    rc = libstm_is_file_locked(lock_fd, err);
-    if (stm_unlikely(rc < 0))
-        return rc;
-    else if (rc > 0)
-        return stm_make_error(err, 0, "already running, see PID in `%s`", pid_path);
-
-    return pid;
+    return getpid();
 }
 
 int
@@ -208,14 +182,14 @@ fail:
 }
 
 int
-libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err)
+libstm_is_password_cached(smtcred_t *creds, const char *daemon_socket, libstm_error_t *err)
 {
     cleanup_close int sd = -1;
     cleanup_close int sd2 = -1;
     cleanup_file FILE *in = NULL;
     cleanup_file FILE *out = NULL;
 
-    sd = libstm_unix_stream_connect(STM_CRED_SOCK_PATH, err);
+    sd = libstm_unix_stream_connect(daemon_socket, err);
     if (stm_unlikely(sd < 0))
         return stm_make_error(err, errno, "failed to connect to unix socket");
 
@@ -248,14 +222,14 @@ libstm_is_password_cached(smtcred_t *creds, libstm_error_t *err)
 }
 
 int
-libstm_unix_stream_get_rtime(libstm_error_t *err)
+libstm_unix_stream_get_rtime(const char *sock_path, libstm_error_t *err)
 {
     cleanup_close int sd = -1;
     cleanup_close int sd2 = -1;
     cleanup_file FILE *in = NULL;
     cleanup_file FILE *out = NULL;
 
-    sd = libstm_unix_stream_connect(STM_CRED_SOCK_PATH, err);
+    sd = libstm_unix_stream_connect(sock_path, err);
     if (stm_unlikely(sd < 0))
         return stm_make_error(err, errno, "failed to connect to unix socket");
 
@@ -277,13 +251,13 @@ libstm_unix_stream_get_rtime(libstm_error_t *err)
 }
 
 int
-libstm_cache_creds(const char *password, libstm_error_t *err)
+libstm_cache_creds(const char *password, const char *daemon_socket, libstm_error_t *err)
 {
     char un_path[108];
     cleanup_close int sd = -1;
     cleanup_file FILE *out = NULL;
 
-    sd = libstm_unix_stream_connect(STM_CRED_SOCK_PATH, err);
+    sd = libstm_unix_stream_connect(daemon_socket, err);
     if (stm_unlikely(sd < 0))
         return stm_make_error(err, errno, "failed to connect to unix socket `%s`", un_path);
 

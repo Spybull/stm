@@ -35,12 +35,12 @@ static char args_doc[] = "[[user@]hostname] [ssh client options]";
 static struct argp argp = { 0, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
 int
-stm_server_subcmd_ssh(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
+stm_server_subcmd_ssh(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)
 {
     libstm_server ssh_arguments = {0};
     argp_parse(&argp, argc, argv, 0, 0, &ssh_arguments);
 
-    glob_args->pdb = libstm_db_auth(NULL, NULL, err);
+    glob_args->pdb = libstm_db_auth(NULL, NULL, glob_args->stmd_creds_pid_path, glob_args->stmd_creds_sock_path, err);
     if (!glob_args->pdb)
         return STM_GENERIC_ERROR;
 

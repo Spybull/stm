@@ -35,9 +35,9 @@ static char args_doc[] = "name";
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
 int
-stm_command_creds(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err stm_unused)
+stm_command_creds(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)
 {
-    int rc = 0, farg = 0;
+    int farg = 0;
     struct commands_s *curr_cmd;
 
     argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, 0);
@@ -46,8 +46,5 @@ stm_command_creds(stm_glob_args *glob_args stm_unused, int argc, char **argv, li
     if (!curr_cmd)
         libstm_fail_with_error(0, "unknown subcommand `%s`", argv[farg]);
     
-    rc = curr_cmd->handler(0, argc - farg, argv + farg, err);
-    if (rc < 0 && (*err))
-        libstm_fail_with_error((*err)->status, "%s", (*err)->msg);
-    return 0;
+    return curr_cmd->handler(glob_args, argc - farg, argv + farg, err);
 }

@@ -1,18 +1,19 @@
 #include "status.h"
 #include <argp.h>
 #include "libstm/utils.h"
+#include "libstm/config.h"
 
 static char doc[] = "STM creds status";
 static struct argp argp = { 0, NULL, NULL, doc, NULL, NULL, NULL };
 int
-stm_creds_subcmd_status(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err stm_unused)
+stm_creds_subcmd_status(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)
 {
     int rc = 0, rtime = 0;
     argp_parse(&argp, argc, argv, 0, 0, 0);
-
-    if (libstm_is_daemon_active(STM_CRED_PID_PATH, err) > 0) {
+    
+    if (libstm_is_daemon_active(glob_args->stmd_creds_pid_path, err) > 0) {
         // if it's active
-        rtime = libstm_unix_stream_get_rtime(err);
+        rtime = libstm_unix_stream_get_rtime(glob_args->stmd_creds_sock_path, err);
         if (rtime < 0)
             return rtime;
 
@@ -22,7 +23,7 @@ stm_creds_subcmd_status(stm_glob_args *glob_args stm_unused, int argc, char **ar
         unsigned int seconds = rtime % 60;
         snprintf(time_str, sizeof(time_str), "%02u:%02u:%02u", hours, minutes, seconds);
         
-        rc = read_pid_file(STM_CRED_PID_PATH, err);
+        rc = read_pid_file(glob_args->stmd_creds_pid_path, err);
         if (rc < 0)
             return rc;
 

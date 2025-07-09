@@ -28,7 +28,7 @@ libstm_ask_password(const char *prompt, int verify, libstm_error_t *err)
 }
 
 sqlite3 *
-libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
+libstm_db_auth(const char *prompt, char *pwout, const char *daemon_pid, const char *daemon_socket, libstm_error_t *err)
 {
     int rc = 0;
     int attempts = 3;
@@ -37,7 +37,7 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
     bool wanna_cache = false;
 
     /* trying to ask credential daemon for password */
-    rc = libstm_is_daemon_active(STM_CRED_PID_PATH, err);
+    rc = libstm_is_daemon_active(daemon_pid, err);
     if (stm_unlikely(rc < 0))
         return NULL;
 
@@ -51,7 +51,7 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
     /* if daemon is already active */
     if (rc)
     {
-        rc = libstm_is_password_cached(&creds, err);
+        rc = libstm_is_password_cached(&creds, daemon_socket, err);
         if (stm_unlikely(rc < 0))
             return NULL;
         else if (rc == 0) // still not cached
@@ -82,7 +82,7 @@ libstm_db_auth(const char *prompt, char *pwout, libstm_error_t *err)
                             "(attempts remaining: %d)\n", --attempts);
         } else {
             if (wanna_cache) {
-                rc = libstm_cache_creds(passwd, err);
+                rc = libstm_cache_creds(passwd, daemon_socket, err);
                 if (rc < 0)
                     return NULL;
             }

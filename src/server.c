@@ -12,8 +12,6 @@
 #include "subcommands/server/list.h"
 #include "subcommands/server/find.h"
 
-static stm_glob_args server_args;
-
 enum { SERVER_ADD = 1001, SERVER_LIST, SERVER_DEL, SERVER_FIND };
 static struct commands_s sub_cmds[] = {
     { SERVER_ADD,  "add",  stm_server_subcmd_add  },
@@ -47,21 +45,18 @@ static char args_doc[] = "name";
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
 int
-stm_command_server(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
+stm_command_server(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)
 {
     int rc = 0, farg = 0;
     struct commands_s *curr_cmd;
 
-    server_args.argc = argc;
-    server_args.argv = argv;
-
-    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, &server_args);
+    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, 0);
 
     curr_cmd = stm_get_command(argv[farg], sub_cmds);
     if (!curr_cmd)
         libstm_fail_with_error(0, "unknown subcommand `%s`", argv[farg]);
 
-    rc = curr_cmd->handler(&server_args, argc - farg, argv + farg, err);
+    rc = curr_cmd->handler(glob_args, argc - farg, argv + farg, err);
     if (rc < 0 && (*err))
         libstm_fail_with_error((*err)->status, "%s", (*err)->msg);
 

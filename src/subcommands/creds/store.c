@@ -3,16 +3,21 @@
 #include <fcntl.h>
 #include <syslog.h>
 #include <pthread.h>
-#include "libstm/file.h"
-#include "libstm/utils.h"
-#include "libstm/sec.h"
 #include <signal.h>
+#include <limits.h>
 #include <sys/socket.h>
 #include <stdbool.h>
 #include <time.h>
 #include <sys/select.h>
 #include <string.h>
 #include <openssl/evp.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "libstm/file.h"
+#include "libstm/utils.h"
+#include "libstm/config.h"
+#include "libstm/sec.h"
 
 static bool save_immediately = false;
 static char *globcred = NULL;
@@ -60,11 +65,20 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused) {
 static char doc[] = "STM creds store";
 static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
 int
-stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **argv, libstm_error_t *err)
+stm_creds_subcmd_store(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)
 {
     int rc = 0;
 
-    rc = libstm_is_daemon_active(STM_CRED_PID_PATH, err);
+    rc = libstm_create_dir(glob_args->xdg_runtime_path, 0700, err);
+    if (rc < 0) {
+        syslog(UERR, "failed to create daemon runtime dir: `%s`", (*err)->msg);
+        closelog();
+        return 0;
+    }
+
+    chdir(glob_args->xdg_runtime_path);
+    
+    rc = libstm_is_daemon_active(STMD_CRED_PID_FILE, err);
     if (rc > 0) {
         fprintf(stdout, "stm credential daemon already running\n");
         return 0;
@@ -86,7 +100,7 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     }
 
 
-    rc = libstm_daemonize(STM_CRED_PID_PATH, STM_CRED_LOG_PATH, "STM CRED HELPER", err);
+    rc = libstm_daemonize("STMD CREDS DAEMON", err);
     if (rc == PARENT_RC) {
         if (globcred)
             explicit_bzero(globcred, strlen(globcred));
@@ -101,6 +115,9 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
         exit(EXIT_FAILURE);
     }
 
+    syslog(UINF, "starting stm credential store daemon");
+    chdir(glob_args->xdg_runtime_path);
+    
     int sd = -1; 
     struct sigaction sa;
     sa.sa_flags = 0;
@@ -109,9 +126,13 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGALRM, &sa, NULL);
 
+    rc = libstm_create_file(STMD_CRED_PID_FILE, 0600, err);
+    if (rc < 0) {
+        syslog(UERR, "failed to create pid file (%s)", (*err)->msg);
+        return -1;
+    }
 
-    syslog(UINF, "starting stm credential store daemon");
-    int fd_lock = open(STM_CRED_PID_PATH, O_WRONLY);
+    int fd_lock = open(STMD_CRED_PID_FILE, O_WRONLY);
     char buf[16];
     sprintf(buf, "%ld", (long)getpid());
     if (write(fd_lock, buf, strlen(buf) + 1) < 0) {
@@ -122,9 +143,9 @@ stm_creds_subcmd_store(stm_glob_args *glob_args stm_unused, int argc, char **arg
 
     libstm_lock_file(fd_lock);
     
-    sd = libstm_unix_stream_listen(STM_CRED_SOCK_PATH, err);
+    sd = libstm_unix_stream_listen(STMD_CRED_SOCK_FILE, err);
     if (sd < 0) {
-        syslog(UERR, "failed to bind `%s` unix socket", STM_CRED_SOCK_PATH);
+        syslog(UERR, "failed to bind `%s` unix socket", STMD_CRED_SOCK_FILE);
         closelog();
         exit(EXIT_FAILURE);
     }

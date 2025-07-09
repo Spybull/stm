@@ -105,7 +105,7 @@ stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv
             return STM_GENERIC_ERROR;
     }
 
-    glob_args->pdb = libstm_db_auth(NULL, NULL, err);
+    glob_args->pdb = libstm_db_auth(NULL, NULL, glob_args->stmd_creds_pid_path, glob_args->stmd_creds_sock_path, err);
     if (!glob_args->pdb)
         return STM_GENERIC_ERROR;
 
@@ -122,5 +122,7 @@ stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv
     rc = libstm_db_server_add_metadata(glob_args->mpdb, &server, err);
     if (rc < 0)
         return  STM_GENERIC_ERROR;
+
+    fprintf(stdout, "new account `%s` was successfully created\n", server.name);
     return 0;
 }
