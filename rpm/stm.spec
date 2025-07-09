@@ -1,6 +1,6 @@
 Name:		stm
 Version:	1.0
-Release: 	2%{?dist}
+Release: 	3%{?dist}
 Summary: 	Simple Trash Manager
 
 License:	GPL
@@ -30,6 +30,9 @@ Simple Trash Manager
 /usr/bin/stm
 
 %changelog
+* Wed Jul 9 2025 VB <spybull@proton.me> - 1.0-3
+- Remove system directories for credential daemon
+
 * Tue Jul 1 2025 VB <spybull@proton.me> - 1.0-2
 - Add jansson library
 
