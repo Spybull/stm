@@ -8,9 +8,9 @@ URL:		https://github.com/Spybull/stm/
 Source0:	%{name}-%{version}.tar.gz
 
 BuildRequires: gcc, make, cmake
-BuildRequires: pkgconfig(sqlcipher), pkgconfig(openssl), pkgconfig(jansson)
+BuildRequires: pkgconfig(sqlcipher), pkgconfig(openssl), pkgconfig(jansson), pkgconfig(libssh)
 
-Requires: sqlcipher, openssl, jansson
+Requires: sqlcipher, openssl, jansson, libssh
 
 %description
 Simple Trash Manager
