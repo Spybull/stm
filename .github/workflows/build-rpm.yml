@@ -52,10 +52,10 @@ jobs:
         with:
           name: ${{ env.DISTRO_NAME }}
           path: |
-            $HOME/rpmbuild/RPMS/**/*.rpm
-            $HOME/rpmbuild/SRPMS/*.rpm
-            $HOME/rpmbuild/SOURCES/stm-${VERSION}.tar.gz
-            $HOME/rpmbuild/SOURCES/stm-${VERSION}.zip
+            ~/rpmbuild/RPMS/**/*.rpm
+            ~/rpmbuild/SRPMS/*.rpm
+            ~/rpmbuild/SOURCES/stm-${VERSION}.tar.gz
+            ~/rpmbuild/SOURCES/stm-${VERSION}.zip
   release:
     needs: build
     runs-on: ubuntu-latest
