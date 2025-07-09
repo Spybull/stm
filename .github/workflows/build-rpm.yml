@@ -1,0 +1,50 @@
+name: Build RPM
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distro:
+          - fedora:42
+    container:
+      image: ${{ matrix.distro }}
+    name: Build on ${{ matrix.distro }}
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          dnf install -y rpm-build rpmdevtools git make cmake gcc tar gzip \
+                         sqlcipher-devel openssl-devel jansson-devel pkgconf-pkg-config
+        
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set version
+        run: |
+          VERSION=$(basename ${GITHUB_REF#refs/tags/})
+          echo "VERSION=${VERSION#v}" >> $GITHUB_ENV
+
+      - name: Prepare sources
+        run: |
+          rpmdev-setuptree
+          cp rpm/stm.spec ~/rpmbuild/SPECS/
+          git archive --format=tar.gz --prefix=stm-${VERSION}/ -o ~/rpmbuild/SOURCES/stm-${VERSION}.tar.gz HEAD
+
+      - name: Build RPM
+        run: |
+          cd ~/rpmbuild/SPECS
+          rpmbuild -ba stm.spec
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-${{ matrix.distro }}
+          path: |
+            /root/rpmbuild/RPMS/**/*.rpm
+            /root/rpmbuild/SRPMS/*.rpm
