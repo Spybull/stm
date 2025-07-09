@@ -87,9 +87,9 @@ int main(int argc, char **argv)
         libstm_fail_with_error(errno, "failed to change directory `%s` ", STM_SYSDIR_PATH);
 
     rc = curr_cmd->handler(&arguments, argc - farg, argv + farg, &err);
-    if (!arguments.pdb)
+    if (arguments.pdb)
         sqlite3_close_v2(arguments.pdb);
-    if (!arguments.mpdb)
+    if (arguments.mpdb)
         sqlite3_close_v2(arguments.mpdb);
 
 exit_fail:

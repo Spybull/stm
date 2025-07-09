@@ -96,7 +96,7 @@ libstm_daemonize(const char *pid_path, const char *log_path, const char *logname
 
     np = fork();
     if (stm_likely(np > 0))
-        exit(EXIT_SUCCESS);
+        return PARENT_RC;
     else if (stm_unlikely(np == -1))
         return -3;
 

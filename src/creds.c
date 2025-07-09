@@ -6,7 +6,6 @@
 #include "subcommands/creds/status.h"
 #include "subcommands/creds/kill.h"
 
-static stm_glob_args creds_args;
 enum { CREDS_STORE = 1001, CREDS_STATUS, CREDS_KILL };
 static struct commands_s sub_cmds[] = {
     { CREDS_STORE,   "store",  stm_creds_subcmd_store  },
@@ -41,17 +40,13 @@ stm_command_creds(stm_glob_args *glob_args stm_unused, int argc, char **argv, li
     int rc = 0, farg = 0;
     struct commands_s *curr_cmd;
 
-    creds_args.argc = argc;
-    creds_args.argv = argv;
-
-    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, &creds_args);
-
+    argp_parse(&argp, argc, argv, ARGP_IN_ORDER, &farg, 0);
 
     curr_cmd = stm_get_command(argv[farg], sub_cmds);
     if (!curr_cmd)
         libstm_fail_with_error(0, "unknown subcommand `%s`", argv[farg]);
     
-    rc = curr_cmd->handler(&creds_args, argc - farg, argv + farg, err);
+    rc = curr_cmd->handler(0, argc - farg, argv + farg, err);
     if (rc < 0 && (*err))
         libstm_fail_with_error((*err)->status, "%s", (*err)->msg);
     return 0;
