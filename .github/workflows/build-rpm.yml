@@ -67,7 +67,7 @@ jobs:
       - name: Download rpm artifacts
         uses: actions/download-artifact@v4
         with:
-          name: rpm-fedora-42
+          name: fedora-42
           path: dist/
 
       - name: Release and upload assets
