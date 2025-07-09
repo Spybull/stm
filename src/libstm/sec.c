@@ -15,7 +15,7 @@ libstm_ask_password(const char *prompt, int verify, libstm_error_t *err)
 
     rc = EVP_read_pw_string(passwd, sizeof(passwd), prompt, verify);
     if (rc < 0) {
-        stm_make_error(err, errno, "EVP_read_pw_string error");
+        stm_make_error(err, errno, "Error: ");
         return NULL;
     }
 
