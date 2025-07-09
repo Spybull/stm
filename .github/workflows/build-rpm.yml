@@ -20,7 +20,8 @@ jobs:
       - name: Install build dependencies
         run: |
           dnf install -y rpm-build rpmdevtools git make cmake gcc tar gzip \
-                         sqlcipher-devel openssl-devel jansson-devel pkgconf-pkg-config
+                         sqlcipher-devel openssl-devel jansson-devel pkgconf-pkg-config \
+                         libssh-devel
         
       - name: Checkout code
         uses: actions/checkout@v4
