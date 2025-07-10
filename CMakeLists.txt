@@ -22,23 +22,35 @@ endif()
 message(STATUS "Current build type: ${CMAKE_BUILD_TYPE}")
 
 add_subdirectory(src/libstm)
+
 set(SRCS
     src/cmd.c
     src/init.c
     src/creds.c
+    src/server.c
+    src/stm.c
+)
+
+set(CREDS_SUBCMD_SRC
     src/subcommands/creds/store.c
     src/subcommands/creds/status.c
     src/subcommands/creds/kill.c
-    src/server.c
+)
+
+set(SERVER_SUBCMD_SRC
     src/subcommands/server/add.c
     src/subcommands/server/del.c
     src/subcommands/server/list.c
     src/subcommands/server/ssh.c
     src/subcommands/server/find.c
-    src/stm.c)
+    src/subcommands/server/info.c
+    src/subcommands/server/info/get.c
+)
+
+
 
 target_link_libraries(stm PRIVATE libstm)
-target_sources(stm PRIVATE ${SRCS})
+target_sources(stm PRIVATE ${SRCS} ${SERVER_SUBCMD_SRC} ${CREDS_SUBCMD_SRC})
 
 install(TARGETS stm
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

@@ -76,7 +76,7 @@ libstm_create_dir(const char *path, mode_t mode, libstm_error_t *err) {
 
             return 0; /* directory already exists */
         }
-        return stm_make_error(err, errno, "failed to create directory `%s`", path);
+        return stm_make_error(err, errno, "failed to create directory `%s` ", path);
     }
 
     return 0;

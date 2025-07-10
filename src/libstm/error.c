@@ -15,7 +15,7 @@ libstm_make_error(libstm_error_t *err, int status, const char *msg, ...)
     *err = xmalloc(sizeof(struct libstm_error_s));
     ptr = *err;
     ptr->status = status;
-	if (vasprintf(&(ptr->msg), msg, args_list) < 0)
+	if (stm_unlikely(vasprintf(&(ptr->msg), msg, args_list) < 0))
 	    stm_oom();
     va_end(args_list);
     return -status - 1;

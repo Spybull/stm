@@ -130,10 +130,21 @@ __attribute__ ((malloc)) static inline char *
 xstrdup0 (char *s)
 {
   char *_s = strdup(s);
-  memset(s, 0, strlen(s));
   if (_s == NULL)
     stm_oom();
 
+  memset(s, 0, strlen(s));
+  return _s;
+}
+
+/* like xstrdup0 without optimizations */
+__attribute__ ((malloc)) static inline char *
+xstrdup0s (char *s)
+{
+  char *_s = strdup(s);
+  if (_s == NULL)
+    stm_oom();
+  explicit_bzero(s, strlen(s));
   return _s;
 }
 

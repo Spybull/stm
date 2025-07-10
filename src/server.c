@@ -11,12 +11,14 @@
 #include "subcommands/server/del.h"
 #include "subcommands/server/list.h"
 #include "subcommands/server/find.h"
+#include "subcommands/server/info.h"
 
-enum { SERVER_ADD = 1001, SERVER_LIST, SERVER_DEL, SERVER_FIND };
+enum { SERVER_ADD = 1001, SERVER_LIST, SERVER_DEL, SERVER_FIND, SERVER_INFO };
 static struct commands_s sub_cmds[] = {
     { SERVER_ADD,  "add",  stm_server_subcmd_add  },
     { SERVER_ADD,  "ssh",  stm_server_subcmd_ssh  },
     { SERVER_DEL,  "del",  stm_server_subcmd_del  },
+    { SERVER_INFO, "info", stm_server_subcmd_info },
     { SERVER_LIST, "list", stm_server_subcmd_list },
     { SERVER_FIND, "find", stm_server_subcmd_find },
     { 0, }
@@ -40,7 +42,8 @@ static char doc[] = "\nSUBCOMMANDS:\n"
                     "\tssh  - connect to server\n"
                     "\tdel  - delete server\n"
                     "\tlist - list servers\n"
-                    "\tfind - find servers\n";
+                    "\tfind - find servers\n"
+                    "\tinfo - get server info\n";
 static char args_doc[] = "name";
 static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
 

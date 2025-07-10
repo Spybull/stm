@@ -117,7 +117,7 @@ libstm_is_daemon_active(const char *pid_path, libstm_error_t *err)
     if (stm_unlikely(fd < 0)) {
         if (errno == ENOENT)
             return 0;
-        return stm_make_error(err, errno, "failed to open daemon PID file `%s`", pid_path);
+        return stm_make_error(err, errno, "failed to open daemon PID file `%s` ", pid_path);
     }
     return libstm_is_file_locked(fd, err);
 }

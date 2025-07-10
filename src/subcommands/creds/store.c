@@ -13,36 +13,52 @@
 #include <openssl/evp.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/prctl.h>
 
 #include "libstm/file.h"
 #include "libstm/utils.h"
 #include "libstm/config.h"
 #include "libstm/sec.h"
 
+
 #define MIN_STORE_MINS 1
 #define MAX_STORE_MINS 1440
 #define DEF_STORE_MINS 60
 
+static const char *cd_name = "stmcd";
 static bool save_immediately = false;
 static unsigned long timeout = DEF_STORE_MINS;
 static char *globcred = NULL;
 static void *accept_client(void *);
 
 
+static void
+setup_cred(char **cred, char unsafe_creds[]) {
+    if (*cred != NULL)
+        free(*cred);
+
+    *cred = xstrdup0s(unsafe_creds);
+}
+
+static void
+destroy_cred(char **cred) {
+    if (cred && *cred) {
+        explicit_bzero(*cred, strlen(*cred));
+        free(*cred);
+        *cred = NULL;
+    }
+}
 
 static void
 handle_signal(int signal)
 {
-    if (signal == SIGTERM) {
-        syslog(UINF, "terminating %s credential daemon", "STM CRED HELPER");
-    } else if (signal == SIGALRM) {
-        syslog(UINF, "terminating %s by timeout", "STM CRED HELPER");
-        if (globcred)
-            explicit_bzero(globcred, strlen(globcred));
-        
-        free(globcred);
-    }
+    if (signal == SIGTERM)
+        syslog(UINF, "terminating %s", cd_name);
+    
+    if (signal == SIGALRM)
+        syslog(UINF, "terminating %s by timeout", cd_name);
 
+    destroy_cred(&globcred);
     exit(EXIT_SUCCESS);
 }
 
@@ -90,11 +106,8 @@ stm_creds_subcmd_store(stm_glob_args *glob_args, int argc, char **argv, libstm_e
     int rc = 0;
 
     rc = libstm_create_dir(glob_args->xdg_runtime_path, 0700, err);
-    if (rc < 0) {
-        syslog(UERR, "failed to create daemon runtime dir: `%s`", (*err)->msg);
-        closelog();
-        return 0;
-    }
+    if (rc < 0)
+        return rc;
 
     if (chdir(glob_args->xdg_runtime_path) < 0)
         stm_make_error(err, errno, "failed to change directory `%s` ", glob_args->xdg_runtime_path);
@@ -103,40 +116,42 @@ stm_creds_subcmd_store(stm_glob_args *glob_args, int argc, char **argv, libstm_e
 
     rc = libstm_is_daemon_active(STMD_CRED_PID_FILE, err);
     if (rc > 0) {
-        fprintf(stdout, "stm credential daemon already running\n");
+        fprintf(stdout, "%s already running\n", cd_name);
         return 0;
     }
 
-    if (save_immediately)
-    {
+    if (save_immediately) {
         char buf[BUFSIZ] = {0};
         if (EVP_read_pw_string(buf, sizeof(buf), "enter database password: ", false) < 0)
             return stm_make_error(err, errno, "EVP_read_pw_string error");
 
-        globcred = xstrdup0(buf);
-        explicit_bzero(buf, sizeof(buf));
-
+        setup_cred(&globcred, buf);
         if (!globcred)
             fprintf(stderr, "could not auth immediately (%s)", (*err)->msg);
     }
 
-
-    rc = libstm_daemonize("STMD CREDS DAEMON", err);
+    rc = libstm_daemonize(cd_name, err);
     if (rc == PARENT_RC) {
-        if (globcred)
-            explicit_bzero(globcred, strlen(globcred));
-        
-        free(globcred);
+        destroy_cred(&globcred);
         return 0;
     }
 
     if (rc <= 0) {
-        syslog(UERR, "failed to start daemon: %s", (*err)->msg);
-        closelog();
-        exit(EXIT_FAILURE);
+        destroy_cred(&globcred);
+        return rc;
     }
 
-    syslog(UINF, "starting stm credential store daemon");
+    for (int i = 0; i < argc; ++i)
+        memset(argv[i], 0, strlen(argv[i]));
+
+    size_t len = 0;
+    for (int i = 0; i < glob_args->argc; ++i)
+        len += strlen(glob_args->argv[i]) + 1;
+
+    strncpy(glob_args->argv[0], cd_name, len - 1);
+    memset(glob_args->argv[0] + strlen(cd_name), 0, len - strlen(cd_name));
+
+    syslog(UINF, "starting %s daemon", cd_name);
     if (chdir(glob_args->xdg_runtime_path) < 0) {
         syslog(UERR, "failed to change directory from daemon");
         closelog();
@@ -185,7 +200,6 @@ stm_creds_subcmd_store(stm_glob_args *glob_args, int argc, char **argv, libstm_e
             continue;
         }
 
-        syslog(UINF, "accepted connection");
         pthread_t th;
         rc = pthread_create(&th, NULL, accept_client, &client_fd);
         if (rc != 0)
@@ -216,20 +230,19 @@ accept_client(void *data) {
     while (fgets(buffer, 4096, in) != NULL) {
 
         if (strcmp(buffer, "getcred\n") == 0) {
-            syslog(UINF, "getting credentials command issued");
+            syslog(UINF, "get command issued");
             fprintf(out, "%s\n", globcred ? globcred : "");
             fflush(out);
-            
         } else if (strcmp(buffer, "setcred\n") == 0) {
-            syslog(UINF, "setting credentials command issued");
+            syslog(UINF, "set command issued");
                 char pass[256];
                 if (fgets(pass, 256, in) == NULL)
                     return NULL;
 
                 pass[strcspn(pass, "\n")] = 0;
-                globcred = xstrdup0(pass);
-                explicit_bzero(pass, strlen(pass));
+                setup_cred(&globcred, pass);
         } else if (strcmp(buffer, "gettime\n") == 0) {
+            syslog(UINF, "time command issued");
             unsigned int remaining_time = alarm(0);
             alarm(remaining_time);
             fprintf(out, "%d\n", remaining_time);

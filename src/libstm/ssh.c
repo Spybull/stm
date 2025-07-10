@@ -3,7 +3,6 @@
 #include <signal.h>
 #include <termios.h>
 #include <sys/ioctl.h>
-#include <libssh/libssh.h>
 #include <libssh/callbacks.h>
 
 static struct termios terminal;
@@ -94,7 +93,6 @@ verify_knownhost(ssh_session session)
 static int 
 ssh_console_auth(ssh_session session, const char *password)
 {
-    char *banner = NULL;
     int method, rc;
 
     rc = ssh_userauth_none(session, NULL);
@@ -104,13 +102,13 @@ ssh_console_auth(ssh_session session, const char *password)
     method = ssh_userauth_list(session, NULL);
     int retries = 5;
 
-    while (rc != SSH_AUTH_SUCCESS && retries--)
+    while (retries--)
     {
-        if ( (method & SSH_AUTH_METHOD_PASSWORD) && password && *password ) {
+        if ( (method & SSH_AUTH_METHOD_PASSWORD) && password && *password ){
             rc = ssh_userauth_password(session, NULL, password);
         } else if (method & SSH_AUTH_METHOD_PUBLICKEY) {
             rc = ssh_userauth_publickey_auto(session, NULL, NULL);
-            //return SSH_AUTH_ERROR; // see man ssh_config (by default ConnectionAttempts=1)
+            
         } else {
             fprintf(stderr, "No supported authentication method available\n");
             return SSH_AUTH_DENIED;
@@ -122,12 +120,6 @@ ssh_console_auth(ssh_session session, const char *password)
         if (rc == SSH_AUTH_ERROR || rc == SSH_AUTH_DENIED)
             return rc;
 
-    }
-
-    banner = ssh_get_issue_banner(session);
-    if (banner) {
-        printf("%s\n",banner);
-        ssh_string_free_char(banner);
     }
 
     return rc;
@@ -254,10 +246,6 @@ new_ssh_session(ssh_session session, libstm_server *srv, libstm_error_t *err)
        which methods are accepted by the server  */
     ssh_userauth_none(session, NULL);
 
-    char *banner = ssh_get_issue_banner(session);
-    if (banner)
-        printf("%s\n", banner);
-
     int auth = ssh_console_auth(session, srv->creds);
     if (auth != SSH_AUTH_SUCCESS)
         return stm_make_error(err, 0, "%s", ssh_get_error(session));
@@ -314,4 +302,84 @@ libstm_parse_user_host(const char *user_host, libstm_error_t *err) {
     user_data->host = host;
     
     return user_data;
+}
+
+ssh_session
+libstm_ssh_connect_once(const char *host, const char *user, const char *password, libstm_error_t *err)
+{
+    ssh_session session = ssh_new();
+    if (session == NULL) {
+        stm_make_error(err, errno, "ssh_new failed");
+        return NULL;
+    }
+
+    ssh_options_set(session, SSH_OPTIONS_HOST, host);
+    ssh_options_set(session, SSH_OPTIONS_USER, user);
+    /*int verbosity = SSH_LOG_PROTOCOL;
+    ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);*/
+
+    if (ssh_connect(session) != SSH_OK) {
+        stm_make_error(err, 0, "Error connecting to host: %s", ssh_get_error(session));
+        ssh_free(session);
+        return NULL;
+    }
+    
+    if (ssh_userauth_none(session, NULL) == SSH_AUTH_ERROR) {
+        stm_make_error(err, 0, "ssh_userauth_none failed: %s", ssh_get_error(session));
+        ssh_disconnect(session);
+        ssh_free(session);
+        return NULL;
+    }
+
+    if (password && ssh_userauth_password(session, NULL, password) == SSH_AUTH_SUCCESS)
+        return session;
+
+    stm_make_error(err, 0, "Authentication failed: %s\n", ssh_get_error(session));
+    ssh_disconnect(session);
+    ssh_free(session);
+    return NULL;
+}
+
+char *
+libstm_ssh_exec_cmd(ssh_session *session, const char *cmd)
+{
+    ssh_channel channel = ssh_channel_new(*session);
+    if (!channel)
+        return NULL;
+
+    if (ssh_channel_open_session(channel) != SSH_OK)
+        goto cleanup;
+
+    if (ssh_channel_request_exec(channel, cmd) != SSH_OK)
+        goto cleanup;
+
+    char buffer[256];
+    size_t total = 0;
+    char *output = malloc(4096);
+    if (!output)
+        goto cleanup;
+
+    output[0] = '\0';
+
+    int n;
+    while ((n = ssh_channel_read(channel, buffer, sizeof(buffer) - 1, 0)) > 0) {
+        buffer[n] = '\0';
+        if (total + n >= 4096)
+            break; // упрощённая защита
+        strcat(output, buffer);
+        total += n;
+    }
+
+    ssh_channel_send_eof(channel);
+    ssh_channel_close(channel);
+    ssh_channel_free(channel);
+
+    return output;
+
+cleanup:
+    ssh_channel_close(channel);
+    ssh_channel_free(channel);
+    return NULL;
+
+     return 0;
 }
