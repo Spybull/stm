@@ -47,6 +47,6 @@ stm_server_info_get(stm_glob_args *glob_args, int argc, char **argv, libstm_erro
     if (session == NULL)
         return -1;
     printf("data -> %s\n", libstm_ssh_exec_cmd(&session, "cat /proc/meminfo"));
-
+    
     return 0;
 }

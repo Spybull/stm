@@ -7,6 +7,7 @@
 #include <syslog.h>
 
 #define STM_GENERIC_ERROR -1
+#define STM_COMPRESSION_ERROR -10
 
 /* syslog */
 #define UERR LOG_USER | LOG_ERR

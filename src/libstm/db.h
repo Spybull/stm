@@ -6,19 +6,34 @@
 
 typedef int (*sqlite_cb)(void *, int, char *[], char *[]);
 
-#define CREATE_DRYDB                                                    \
-"                                                                       \
-CREATE TABLE [SERVERS] (                                                \
-	id          INTEGER PRIMARY KEY,                                    \
-	name        TEXT NOT NULL CHECK (name != '') UNIQUE,                \
-	ip          TEXT NOT NULL,                                          \
-	port        INTEGER DEFAULT 22 CHECK (port >= 0 AND port <= 65535), \
-	proto       TEXT DEFAULT 'TCP',                                     \
-	login       TEXT,                                                   \
-	creds       TEXT,                                                   \
-	description TEXT,                                                   \
-	created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,                     \
-	UNIQUE(ip, port, login, name));                                     \
+#define CREATE_DRYDB                                                     	 \
+"                                                                        	 \
+CREATE TABLE [SERVERS] (                                                 	 \
+	id          INTEGER PRIMARY KEY,                                     	 \
+	name        TEXT NOT NULL CHECK (name != '') UNIQUE,                 	 \
+	ip          TEXT NOT NULL,                                           	 \
+	port        INTEGER DEFAULT 22 CHECK (port >= 0 AND port <= 65535),  	 \
+	proto       TEXT DEFAULT 'TCP',                                      	 \
+	login       TEXT,                                                    	 \
+	creds       TEXT,                                                    	 \
+	description TEXT,                                                    	 \
+	created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,                      	 \
+	UNIQUE(ip, port, login, name));                                      	 \
+																		 	 \
+CREATE TABLE [SNAPSHOTS] (												 	 \
+	id 		   INTEGER PRIMARY KEY,										 	 \
+    server_id  INTEGER NOT NULL REFERENCES SERVERS(id) ON DELETE CASCADE,	 \
+    timestamp  DATETIME DEFAULT CURRENT_TIMESTAMP,						 	 \
+    note       TEXT,													 	 \
+    UNIQUE(server_id, timestamp));										 	 \
+																			 \
+CREATE TABLE [SNAP_ENTRIES] (											 	 \
+    id          INTEGER PRIMARY KEY,									 	 \
+    snapshot_id INTEGER NOT NULL REFERENCES SNAPSHOTS(id) ON DELETE CASCADE, \
+    name        TEXT NOT NULL,												 \
+    encoding    TEXT DEFAULT 'zstd',										 \
+    content     BLOB NOT NULL,												 \
+    UNIQUE(snapshot_id, name));												 \
 "
 
 #define CREATE_DRYDB_META							\

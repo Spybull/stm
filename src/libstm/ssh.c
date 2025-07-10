@@ -309,7 +309,7 @@ libstm_ssh_connect_once(const char *host, const char *user, const char *password
 {
     ssh_session session = ssh_new();
     if (session == NULL) {
-        stm_make_error(err, errno, "ssh_new failed");
+        stm_make_error(err, errno, "failed to initialize ssh session");
         return NULL;
     }
 
