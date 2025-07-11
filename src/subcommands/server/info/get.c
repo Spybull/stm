@@ -5,6 +5,7 @@
 #include "libstm/sec.h"
 #include "libstm/ssh.h"
 #include "libstm/utils.h"
+#include "libstm/compress.h"
 
 static struct argp_option options[] = { { 0 } };
 static error_t
@@ -23,6 +24,14 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused)
 }
 static char doc[] = "STM server info get";
 static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
+
+static char *inventory_matrix[] = {
+    "uname -a",
+    "cat /proc/cpuinfo",
+    "cat /proc/meminfo",
+    "cat /proc/net/dev",
+    "cat /proc/net/route",
+};
 
 int
 stm_server_info_get(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)
@@ -46,7 +55,8 @@ stm_server_info_get(stm_glob_args *glob_args, int argc, char **argv, libstm_erro
     ssh_session session = libstm_ssh_connect_once(srv->ip, srv->login, srv->creds, err);
     if (session == NULL)
         return -1;
-    printf("data -> %s\n", libstm_ssh_exec_cmd(&session, "cat /proc/meminfo"));
-    
-    return 0;
+
+    char *data = libstm_ssh_exec_cmd(&session, "uname -a");
+    size_t dlen = strlen(data);
+    return libstm_setup_server_info(glob_args->pdb, srv->name, "uname -a", data, dlen, err);
 }

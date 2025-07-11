@@ -3,6 +3,8 @@
 #include "utils.h"
 #include "config.h"
 #include "queries.h"
+#include "compress.h"
+
 
 static int
 make_dummy_query(sqlite3 *pdb, libstm_error_t *err) {
@@ -314,3 +316,73 @@ libstm_server_free(libstm_server *srv)
         srv->creds = NULL;
     }
 }
+
+
+int
+libstm_setup_server_info(sqlite3 *pdb, const char *name, const char *entry_name, const void *data, size_t data_size, libstm_error_t *err)
+{
+    int rc = 0, server_id = -1;
+    sqlite3_stmt *stmt = NULL;
+    const char *query = "SELECT id FROM SERVERS where name = ?";
+
+    rc = sqlite3_prepare_v2(pdb, query, -1, &stmt, NULL);
+    if (stm_unlikely(rc != SQLITE_OK))
+        return stm_make_error(err, 0, "failed to prepare statement: `%s`", sqlite3_errmsg(pdb));
+
+    rc = sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+    if (stm_unlikely(rc != SQLITE_OK)) {
+        sqlite3_finalize(stmt);
+        return stm_make_error(err, 0, "failed to bind parameter: `%s`", sqlite3_errmsg(pdb));
+    }
+
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) {
+        server_id = sqlite3_column_int(stmt, 0);
+    } else {
+        sqlite3_finalize(stmt);
+        return stm_make_error(err, 0, "server '%s' not found", name);
+    }
+    sqlite3_finalize(stmt);
+
+    rc = sqlite3_prepare_v2(pdb, "INSERT INTO SNAPSHOTS(server_id) VALUES (?);", -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+        return stm_make_error(err, 0, "prepare snapshot: %s", sqlite3_errmsg(pdb));
+    
+    sqlite3_bind_int(stmt, 1, server_id);
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        sqlite3_finalize(stmt);
+        return stm_make_error(err, 0, "step snapshot: %s", sqlite3_errmsg(pdb));
+    }
+
+    int snapshot_id = (int)sqlite3_last_insert_rowid(pdb);
+    sqlite3_finalize(stmt);
+
+
+    /* compression */
+        size_t compressed_size = 0;
+        void *compressed = NULL;
+        rc = libstm_compress(LIBSTM_COMP_ZSTD, data, data_size, &compressed_size, &compressed, NULL, err);
+        if (rc < 0 || compressed == NULL)
+            return STM_COMPRESSION_ERROR;
+    /* compression */
+
+    rc = sqlite3_prepare_v2(pdb, "INSERT INTO SNAP_ENTRIES(snapshot_id, name, content) VALUES (?, ?, ?);", -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        free(compressed);
+        return stm_make_error(err, 0, "prepare entry: %s", sqlite3_errmsg(pdb));
+    }
+
+    sqlite3_bind_int(stmt, 1, snapshot_id);
+    sqlite3_bind_text(stmt, 2, entry_name, -1, SQLITE_STATIC);
+    sqlite3_bind_blob(stmt, 3, compressed, compressed_size, free);
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        sqlite3_finalize(stmt);
+        return stm_make_error(err, 0, "step entry: %s", sqlite3_errmsg(pdb));
+    }
+
+    sqlite3_finalize(stmt);
+    return 0;
+}
+
+
+// int libstm_get_server_info

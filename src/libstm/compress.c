@@ -2,17 +2,19 @@
 #include "utils.h"
 
 #include <zstd.h>
-#include <lz4.h>
+#include <stdint.h>
 
 static int
-libstm_zstd_compress(const char *input, size_t input_size, void **out, size_t *output_size, libstm_codec_error_t *)
+libstm_zstd_compress(libstm_compress_opts *opts, const char *input, size_t input_size,
+                    size_t *output_size, void **output_data, libstm_error_t *err)
 {
+    int lvl = opts ? opts->compress_lvl : 3;
     size_t bound = ZSTD_compressBound(input_size);
-    *out = xmalloc(bound);
+    *output_data = xmalloc(bound);
 
-    size_t compressed = ZSTD_compress(*out, bound, input, input_size, ZSTD_maxCLevel()); /* parametrize? */
+    size_t compressed = ZSTD_compress(*output_data, bound, input, input_size, lvl);
     if (ZSTD_isError(compressed)) {
-        free(*out);
+        free(*output_data);
         return stm_make_error(err, 0, "failed to compress: %s", ZSTD_getErrorName(compressed));
     }
 
@@ -20,25 +22,45 @@ libstm_zstd_compress(const char *input, size_t input_size, void **out, size_t *o
     return 0;
 }
 
-int
-libstm_lz4_compress(const char *input, size_t input_size, void **out, size_t *output_size, libstm_error_t *err) {
-    int bound = LZ4_compressBound(input_size);
-    *out = xmalloc(bound);
-    int compressed = LZ4_compress_default(input, *out, input_size, bound);
-    if (compressed <= 0)
-        return stm_make_error(err, 0, "failed to compress lz4");
+stm_unused static int
+libstm_zstd_decompress(libstm_compress_opts *opts stm_unused, const char *input, size_t input_size,
+                      size_t *output_size, void **output_data, libstm_error_t *err)
+{
+    unsigned long long rsize = ZSTD_getFrameContentSize(input, input_size);
+    if (rsize == ZSTD_CONTENTSIZE_ERROR || rsize == ZSTD_CONTENTSIZE_UNKNOWN)
+        return stm_make_error(err, 0, "failed to get frame content size");
 
-    *output_size = compressed;
+    *output_data = xmalloc((size_t)rsize);
+    size_t result = ZSTD_decompress(*output_data, (size_t)rsize, input, input_size);
+    if (ZSTD_isError(result)) {
+        free(*output_data);
+        return stm_make_error(err, 0, "failed to decompress: %s", ZSTD_getErrorName(result));
+    }
+
+    *output_size = result;
     return 0;
 }
 
+
 int
-libstm_compress(stm_compress_t *opts, fn_cps comp_fn, libstm_error_t *err)
+libstm_compress(int type, const char *input, size_t input_size, size_t *output_size, void **output_data, libstm_compress_opts *opts, libstm_error_t *err)
 {
     int rc = 0;
-    rc = comp_fn(opts->input_data, opts->input_size,
-                &opts->output_size, &opts->output_data, err);
-    return rc < 0 ? STM_COMPRESSION_ERROR : 0;
+    if (type == LIBSTM_COMP_ZSTD)
+        rc = libstm_zstd_compress(opts, input, input_size, output_size, output_data, err);
+    return rc;
 }
 
-codec_t cd = create_codec()
+int
+libstm_decompress(const char *input, size_t input_size, size_t *output_size, void **output_data, libstm_error_t *err)
+{
+    int rc = 0;
+    uint32_t magic;
+    memcpy(&magic, input, sizeof(magic));
+
+    if (magic == ZSTD_MAGICNUMBER)
+        rc = libstm_zstd_decompress(NULL, input, input_size, output_size, output_data, err);
+
+    return rc;
+}
+

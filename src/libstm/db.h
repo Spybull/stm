@@ -24,7 +24,6 @@ CREATE TABLE [SNAPSHOTS] (												 	 \
 	id 		   INTEGER PRIMARY KEY,										 	 \
     server_id  INTEGER NOT NULL REFERENCES SERVERS(id) ON DELETE CASCADE,	 \
     timestamp  DATETIME DEFAULT CURRENT_TIMESTAMP,						 	 \
-    note       TEXT,													 	 \
     UNIQUE(server_id, timestamp));										 	 \
 																			 \
 CREATE TABLE [SNAP_ENTRIES] (											 	 \
@@ -75,6 +74,7 @@ STM_API int libstm_db_server_add_metadata(sqlite3 *pdb, libstm_server *srv, libs
 STM_API int libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
 STM_API int libstm_db_server_del(sqlite3 *pdb, const char *name, libstm_error_t *err);
 STM_API libstm_server *libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err);
+STM_API int libstm_setup_server_info(sqlite3 *pdb, const char *name, const char *entry_name, const void *data, size_t data_size, libstm_error_t *err);
 
 /* sqlcipher functions */
 extern int sqlite3_key_v2(

@@ -1,39 +1,38 @@
-#ifndef COMPRESS_DB_H
-#define COMPRESS_DB_H
-#include "cmd.h"
+#ifndef COMPRESS_H
+#define COMPRESS_H
 #include <stdlib.h>
+#include "error.h"
 
-typedef int (*libstm_comp_fn)(const char *input_data, size_t input_size,
-                       size_t *output_size, void **output_data,
-                       libstm_error_t *err);
-
-typedef int (*libstm_decomp_fn)(const char *input_data, size_t input_size,
-                         size_t *output_size, void **output_data,
-                         libstm_error_t *err);
+enum { LIBSTM_COMP_ZSTD };
 
 typedef struct {
-    int code;
-    const char *message;
-    const char *source;
-} libstm_codec_error_t;
+    int compress_lvl;    
+} libstm_compress_opts;
 
 typedef struct {
     int type;
     const char *input_data;
     size_t input_size, output_size;
     void **output_data;    
-} libstm_codec_params;
+} libstm_compress_params;
 
-typedef struct {
-    const char *name;
-    libstm_comp_fn compress;
-    libstm_decomp_fn decompress;
-    libstm_codec_params_t params;
-}libstm_codec;
+typedef int (*libstm_comp_fn)(
+    libstm_compress_opts *opts,
+    const char *input_data,
+    size_t input_size,
+    void **output_data,
+    size_t *output_size,
+    libstm_error_t *err);
+
+typedef int (*libstm_decomp_fn)(
+    libstm_compress_opts *opts,
+    const char *input_data,
+    size_t input_size,
+    void **output_data,
+    size_t *output_size,
+    libstm_error_t *err);
 
 
-int libstm_zstd_compress(const char *input, size_t input_size, void **out, size_t *output_size, libstm_error_t *err);
-int libstm_lz4_compress(const char *input, size_t input_size, void **out, size_t *output_size, libstm_error_t *err);
-int libstm_compress(stm_compress_t *opts, fn_cps comp_fn, libstm_error_t *err);
-
+STM_API int libstm_compress(int type, const char *input, size_t input_size, size_t *output_size, void **output_data, libstm_compress_opts *opts, libstm_error_t *err);
+STM_API int libstm_decompress(const char *input, size_t input_size, size_t *output_size, void **output_data, libstm_error_t *err);
 #endif

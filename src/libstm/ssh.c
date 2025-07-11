@@ -355,7 +355,7 @@ libstm_ssh_exec_cmd(ssh_session *session, const char *cmd)
 
     char buffer[256];
     size_t total = 0;
-    char *output = malloc(4096);
+    char *output = xmalloc(4096);
     if (!output)
         goto cleanup;
 
