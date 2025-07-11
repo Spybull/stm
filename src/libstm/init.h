@@ -2,5 +2,5 @@
 #define STM_INIT_H
 #include "error.h"
 
-int libstm_init(libstm_error_t *err);
+STM_API int libstm_init(libstm_error_t *err);
 #endif

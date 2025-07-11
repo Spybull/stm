@@ -1,27 +1,27 @@
 cmake_minimum_required(VERSION 3.30.8)
 project(libstm C)
+
 set(CMAKE_C_STANDARD 23)
+option(BUILD_SHARED_LIBS "Build shared library" ON)
 
-set(SRCS
-    init.c
-    db.c
-    file.c
-    sec.c
-    ssh.c
-    sysuser.c
-    utils.c
-    error.c
-    formatter.c)
-
+set(SRCS init.c db.c file.c sec.c ssh.c
+    utils.c error.c formatter.c)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SQLCIPHER REQUIRED sqlcipher)
 pkg_check_modules(JANSSON REQUIRED jansson)
 pkg_check_modules(LIBSSH REQUIRED libssh)
 
-add_library(libstm STATIC ${SRCS})
-target_link_libraries(libstm PRIVATE
-                     crypto
+add_library(stmlib ${SRCS})
+
+target_include_directories(stmlib
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${SQLCIPHER_INCLUDE_DIRS} ${JANSSON_INCLUDE_DIRS} ${LIBSSH_INCLUDE_DIRS}
+)
+
+# target_compile_options(stmlib PRIVATE -fvisibility=hidden)
+target_link_libraries(stmlib PUBLIC
                      ${SQLCIPHER_LIBRARIES}
                      ${JANSSON_LIBRARIES}
-                     ${LIBSSH_LIBRARIES})
+                     ${LIBSSH_LIBRARIES}
+                     crypto)

@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <ctype.h>
-
 #include "error.h"
 
 #ifndef TEMP_FAILURE_RETRY
@@ -148,20 +147,14 @@ xstrdup0s (char *s)
   return _s;
 }
 
-FILE *xfdopen(int fd, const char *mode);
+STM_HIDDEN char *whoami(libstm_error_t *err);
+STM_HIDDEN int libstm_cache_creds(const char *password, const char *daemon_socket, libstm_error_t *err);
+STM_HIDDEN int libstm_is_password_cached(smtcred_t *creds, const char *daemon_socket, libstm_error_t *err);
+STM_HIDDEN int libstm_unix_stream_connect(const char *path, libstm_error_t *err);
 
+STM_API int libstm_daemonize(const char *logname, libstm_error_t *err);
+STM_API int libstm_is_daemon_active(const char *pid_path, libstm_error_t *err);
+STM_API int libstm_unix_stream_listen(const char *path, libstm_error_t *err);
+STM_API int libstm_unix_stream_get_rtime(const char *sock_path, libstm_error_t *err);
 
-void trim(char *line);
-int libstm_get_workdir(char *out, libstm_error_t *err);
-
-int libstm_daemonize(const char *logname, libstm_error_t *err);
-int libstm_is_daemon_active(const char *pid_path, libstm_error_t *err);
-int libstm_cache_creds(const char *password, const char *daemon_socket, libstm_error_t *err);
-int libstm_is_password_cached(smtcred_t *creds, const char *daemon_socket, libstm_error_t *err);
-
-int libstm_unix_stream_listen(const char *path, libstm_error_t *err);
-int libstm_unix_stream_connect(const char *path, libstm_error_t *err);
-int libstm_unix_stream_get_rtime(const char *sock_path, libstm_error_t *err);
-pid_t read_pid_file(const char *lock_file, libstm_error_t *err);
-char *whoami(libstm_error_t *err);
 #endif

@@ -8,7 +8,6 @@
 #include "file.h"
 #include "config.h"
 #include "utils.h"
-#include "sysuser.h"
 #include "sec.h"
 
 int

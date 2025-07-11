@@ -5,7 +5,6 @@
 
 #include "libstm/error.h"
 #include "libstm/utils.h"
-#include "libstm/sysuser.h"
 #include "libstm/file.h"
 #include "libstm/config.h"
 #include "libstm/db.h"

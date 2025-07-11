@@ -97,11 +97,3 @@ libstm_db_auth(const char *prompt, char *pwout, const char *daemon_pid, const ch
 
     return pdb;
 }
-
-void
-libstm_secure_memzero(void *ptr, size_t l)
-{
-    volatile unsigned char *p = (volatile unsigned char *)ptr;
-    while (l--)
-        *p++ = 0;
-}

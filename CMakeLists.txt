@@ -49,7 +49,7 @@ set(SERVER_SUBCMD_SRC
 
 
 
-target_link_libraries(stm PRIVATE libstm)
+target_link_libraries(stm PRIVATE stmlib)
 target_sources(stm PRIVATE ${SRCS} ${SERVER_SUBCMD_SRC} ${CREDS_SUBCMD_SRC})
 
 install(TARGETS stm

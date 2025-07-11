@@ -64,17 +64,17 @@ struct libstm_server_s {
 	char *description;
 };
 typedef struct libstm_server_s libstm_server;
-void libstm_server_free(libstm_server *srv);
 
-sqlite3 *libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err);
-int libstm_db_create(const char *filename, const char *scheme, libstm_error_t *err);
-int libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err);
-int libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
+STM_HIDDEN int libstm_db_create(const char *filename, const char *scheme, libstm_error_t *err);
+STM_HIDDEN int libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err);
+STM_HIDDEN int libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
 
-int libstm_db_server_add_metadata(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
-int libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
-int libstm_db_server_del(sqlite3 *pdb, const char *name, libstm_error_t *err);
-libstm_server *libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err);
+STM_API void libstm_server_free(libstm_server *srv);
+STM_API sqlite3 *libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err);
+STM_API int libstm_db_server_add_metadata(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
+STM_API int libstm_db_server_add(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
+STM_API int libstm_db_server_del(sqlite3 *pdb, const char *name, libstm_error_t *err);
+STM_API libstm_server *libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err);
 
 /* sqlcipher functions */
 extern int sqlite3_key_v2(

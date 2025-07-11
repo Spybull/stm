@@ -1,7 +1,9 @@
 #include "status.h"
 #include <argp.h>
+
 #include "libstm/utils.h"
 #include "libstm/config.h"
+#include "libstm/file.h"
 
 static char doc[] = "STM creds status";
 static struct argp argp = { 0, NULL, NULL, doc, NULL, NULL, NULL };

@@ -4,8 +4,8 @@
 #include <zstd.h>
 #include <lz4.h>
 
-int
-libstm_zstd_compress(const char *input, size_t input_size, void **out, size_t *output_size, libstm_error_t *err)
+static int
+libstm_zstd_compress(const char *input, size_t input_size, void **out, size_t *output_size, libstm_codec_error_t *)
 {
     size_t bound = ZSTD_compressBound(input_size);
     *out = xmalloc(bound);
@@ -40,3 +40,5 @@ libstm_compress(stm_compress_t *opts, fn_cps comp_fn, libstm_error_t *err)
                 &opts->output_size, &opts->output_data, err);
     return rc < 0 ? STM_COMPRESSION_ERROR : 0;
 }
+
+codec_t cd = create_codec()

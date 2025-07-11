@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <limits.h>
 
 int
 libstm_create_file(const char *path, mode_t mode, libstm_error_t *err)
@@ -126,4 +127,58 @@ libstm_lock_file(int fd) {
     lock.l_whence = SEEK_SET;
     lock.l_len = 0;
     return (fcntl(fd, F_SETLK, &lock));
+}
+
+FILE *
+xfdopen(int fd, const char *mode) {
+
+    FILE *stream = fdopen(fd, mode); 
+    if (stm_unlikely(stream == NULL))
+        stm_oom();
+    return stream;
+}
+
+pid_t
+read_pid_file(const char *lock_file, libstm_error_t *err) {
+    
+    char buf[16] = {0};
+    cleanup_close int fd = 0;
+
+    fd = open(lock_file, O_RDONLY);
+    if (fd < 0) {
+        if (errno == ENOENT) {
+            return stm_make_error(err, 0, "stm creds daemon is not running");
+        }
+
+        return stm_make_error(err, errno, "failed to open %s", lock_file);
+    }
+
+    ssize_t nr = 0;
+    if ( ( nr = read(fd, buf, sizeof(buf))) < 0 )
+        return stm_make_error(err, errno, "failed to read %s", lock_file);
+
+    if (nr == 0)
+        return stm_make_error(err, 0, "no such process pid in %s", lock_file);
+
+    return (pid_t)atoi(buf);
+}
+
+
+int
+libstm_get_workdir(char *out, libstm_error_t *err)
+{
+    cleanup_free char *home_path = NULL;
+
+    const char *env = getenv("HOME");
+    if (stm_likely(env != NULL)) {
+        home_path = xstrdup(env);
+    } else {
+        home_path = getcwd(NULL, 0);
+        if (stm_unlikely(home_path == NULL))
+            return stm_make_error(err, errno, "failed to getcwd");
+    }
+
+    snprintf(out, PATH_MAX, "%s", home_path);
+
+    return 0;
 }

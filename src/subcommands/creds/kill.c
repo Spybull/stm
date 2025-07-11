@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+
 #include "libstm/utils.h"
 #include "libstm/config.h"
+#include "libstm/file.h"
 
 static char doc[] = "STM creds kill daemon";
 static struct argp argp = { 0, NULL, NULL, doc, NULL, NULL, NULL };
