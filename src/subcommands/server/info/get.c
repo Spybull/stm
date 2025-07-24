@@ -26,7 +26,7 @@ static char doc[] = "STM server info get";
 static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
 
 static char *inventory_matrix[] = {
-    "uname -a",
+    "cat /proc/sys/kernel/hostname",
     "cat /proc/cpuinfo",
     "cat /proc/meminfo",
     "cat /proc/net/dev",
