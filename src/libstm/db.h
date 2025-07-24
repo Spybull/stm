@@ -68,6 +68,7 @@ STM_HIDDEN int libstm_db_create(const char *filename, const char *scheme, libstm
 STM_HIDDEN int libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err);
 STM_HIDDEN int libstm_db_decrypt(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
 
+STM_API int libstm_db_rekey(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err);
 STM_API void libstm_server_free(libstm_server *srv);
 STM_API sqlite3 *libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err);
 STM_API int libstm_db_server_add_metadata(sqlite3 *pdb, libstm_server *srv, libstm_error_t *err);
@@ -87,6 +88,11 @@ extern int sqlite3_rekey_v2(
 	sqlite3 *db,               /* Database to be rekeyed */
 	const char *zDbName,       /* Which ATTACHed database to rekey */
 	const void *pKey, int nKey /* The new key */
+);
+
+extern int sqlite3_rekey(
+	sqlite3 *db,
+	const void *pKey, int nKey
 );
 
 #endif

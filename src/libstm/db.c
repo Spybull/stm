@@ -79,6 +79,17 @@ libstm_db_open(const char *filename, const char *pKey, libstm_error_t *err)
 }
 
 int
+libstm_db_rekey(sqlite3 *pdb, const char *pKey, int nKey, libstm_error_t *err) {
+
+    int rc;
+    rc = sqlite3_rekey(pdb, pKey, nKey);
+    if (rc != SQLITE_OK)
+        return stm_make_error(err, rc, "failed to rekey database");
+
+    return 0;
+}
+
+int
 libstm_db_init(const char *filename, const char *pKey, int nKey, const char *scheme, libstm_error_t *err)
 {
     int rc;

@@ -25,7 +25,7 @@ parse_opt(int key, char *arg stm_unused, struct argp_state *state stm_unused)
 static char doc[] = "STM server info get";
 static struct argp argp = { options, parse_opt, "NAME", doc, NULL, NULL, NULL };
 
-static char *inventory_matrix[] = {
+stm_unused static char *inventory_matrix[] = {
     "cat /proc/sys/kernel/hostname",
     "cat /proc/cpuinfo",
     "cat /proc/meminfo",
