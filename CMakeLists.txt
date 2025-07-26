@@ -9,11 +9,11 @@ set(STM_VERSION_PATCH 0)
 set(STM_VERSION_STRING "${STM_VERSION_MAJOR}.${STM_VERSION_MINOR}.${STM_VERSION_PATCH}")
 
 add_executable(stm)
-target_compile_options(stm PRIVATE -Wall -Wextra -Werror -pedantic)
+target_compile_options(stm PRIVATE -Wall -Wextra -Werror)
 target_compile_options(stm PRIVATE $<$<CONFIG:Debug>:-g -O0>)
 target_compile_options(stm PRIVATE $<$<CONFIG:Release>:-O3>)
 add_definitions(-D_GNU_SOURCE -D_XOPEN_SOURCE)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -pedantic")
+
 target_include_directories(stm PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -47,10 +47,22 @@ set(SERVER_SUBCMD_SRC
     src/subcommands/server/info/get.c
 )
 
+if(APPLE)
+    find_path(ARGP_INCLUDE_DIR argp.h HINTS /opt/homebrew/include /usr/local/include)
+    find_library(ARGP_LIB argp HINTS /opt/homebrew/lib /usr/local/lib)
+
+    if(ARGP_INCLUDE_DIR AND ARGP_LIB)
+        add_library(argp INTERFACE)
+        target_include_directories(argp INTERFACE ${ARGP_INCLUDE_DIR})
+        target_link_libraries(argp INTERFACE ${ARGP_LIB})
+    else()
+        message(FATAL_ERROR "argp-standalone not found, please install via brew")
+    endif()
+endif()
 
 
-target_link_libraries(stm PRIVATE stmlib)
 target_sources(stm PRIVATE ${SRCS} ${SERVER_SUBCMD_SRC} ${CREDS_SUBCMD_SRC})
+target_link_libraries(stm PRIVATE stmlib argp)
 
 install(TARGETS stm
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

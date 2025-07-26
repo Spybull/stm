@@ -14,6 +14,7 @@
 #include "subcommands/server/info.h"
 
 enum { SERVER_ADD = 1001, SERVER_LIST, SERVER_DEL, SERVER_FIND, SERVER_INFO };
+static struct argp_option options[] = {{ 0 }};
 static struct commands_s sub_cmds[] = {
     { SERVER_ADD,  "add",  stm_server_subcmd_add  },
     { SERVER_ADD,  "ssh",  stm_server_subcmd_ssh  },
@@ -45,7 +46,7 @@ static char doc[] = "\nSUBCOMMANDS:\n"
                     "\tfind - find servers\n"
                     "\tinfo - get server info\n";
 static char args_doc[] = "name";
-static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
+static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
 int
 stm_command_server(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)

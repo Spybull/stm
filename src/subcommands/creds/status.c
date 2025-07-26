@@ -6,7 +6,8 @@
 #include "libstm/file.h"
 
 static char doc[] = "STM creds status";
-static struct argp argp = { 0, NULL, NULL, doc, NULL, NULL, NULL };
+static struct argp_option options[] = {{ 0 }};
+static struct argp argp = { options, NULL, NULL, doc, NULL, NULL, NULL };
 int
 stm_creds_subcmd_status(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)
 {

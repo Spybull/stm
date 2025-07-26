@@ -1,13 +1,10 @@
 #include "ssh.h"
 #include <argp.h>
-
 #include "libstm/utils.h"
 #include "libstm/sec.h"
 #include "libstm/ssh.h"
 
-
-
-
+static struct argp_option options[] = {{ 0 }};
 
 static error_t
 parse_opt(int key, char *arg, struct argp_state *state) {
@@ -32,7 +29,7 @@ parse_opt(int key, char *arg, struct argp_state *state) {
 }
 static char doc[] = "STM ssh connection spawner";
 static char args_doc[] = "[[user@]hostname] [ssh client options]";
-static struct argp argp = { 0, parse_opt, args_doc, doc, NULL, NULL, NULL };
+static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
 int
 stm_server_subcmd_ssh(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)

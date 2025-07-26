@@ -7,6 +7,7 @@
 #include "subcommands/creds/kill.h"
 
 enum { CREDS_STORE = 1001, CREDS_STATUS, CREDS_KILL };
+static struct argp_option options[] = {{ 0 }};
 static struct commands_s sub_cmds[] = {
     { CREDS_STORE,   "store",  stm_creds_subcmd_store  },
     { CREDS_STATUS,  "status", stm_creds_subcmd_status },
@@ -32,7 +33,7 @@ static char doc[] = "\nSUB COMMANDS:\n"
                     "\tstatus - get daemon status\n"
                     "\tkill   - kill creds daemon\n";
 static char args_doc[] = "name";
-static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
+static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
 int
 stm_command_creds(stm_glob_args *glob_args, int argc, char **argv, libstm_error_t *err)

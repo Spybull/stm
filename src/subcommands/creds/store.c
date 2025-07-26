@@ -13,7 +13,6 @@
 #include <openssl/evp.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/prctl.h>
 
 #include "libstm/file.h"
 #include "libstm/utils.h"

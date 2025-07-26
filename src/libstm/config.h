@@ -15,6 +15,13 @@
     #define STMD_CRED_PID_FILE  "stmd.pid"
     #define STMD_CRED_SOCK_FILE "stmd.sock"
 #elif _WIN32
+#elif defined(__APPLE__) || defined(__MACH__)
+    #define STM_DIR_NAME "stm"
+    #define STM_DATABASE_NAME "stm.db"
+    #define STM_DATABASE_META "stm_meta.db"
+
+    #define STMD_CRED_PID_FILE  "stmd.pid"
+    #define STMD_CRED_SOCK_FILE "stmd.sock"
 #else
     #error unsupported platform
 #endif

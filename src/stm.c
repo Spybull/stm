@@ -1,7 +1,7 @@
 #include "stm.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <linux/limits.h>
+#include <limits.h>
 
 #include "libstm/error.h"
 #include "libstm/utils.h"
@@ -25,7 +25,7 @@ enum {
     CMD_CREDS,
     CMD_SERVER
 };
-
+static struct argp_option options[] = {{ 0 }};
 struct commands_s cmds[] = {
     { CMD_INIT,   "init",   stm_command_init   },
     { CMD_CREDS,  "creds",  stm_command_creds  },
@@ -53,7 +53,7 @@ static char doc[] = "\nCOMMANDS:\n"
                     "\tcreds  - credential manager\n"
                     "\tserver - manage servers\n";
 
-static struct argp argp = { NULL, parse_opt, args_doc, doc, NULL, NULL, NULL };
+static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
 int main(int argc, char **argv)
 {

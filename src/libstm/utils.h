@@ -41,6 +41,15 @@
     #define stm_prefetch(x, ...) (x, __VA_ARGS__)
 #endif
 
+#if defined(__APPLE__) || defined(__MACH__)
+    static void explicit_bzero(void *s, size_t n) {
+      volatile unsigned char *p = (volatile unsigned char *)s;
+      while(n--)
+        *p++ = 0;
+
+    }
+#endif
+
 #define cleanup_free      __attribute__ ((cleanup (cleanup_freep)))
 #define cleanup_free_zero __attribute__ ((cleanup (cleanup_freep_zero)))
 #define cleanup_file __attribute__ ((cleanup (cleanup_filep)))

@@ -2,7 +2,7 @@
 #include "file.h"
 #include <stdlib.h>
 #include <fcntl.h>
-#include <linux/limits.h>
+#include <limits.h>
 #include <syslog.h>
 #include <pwd.h>
 #include <sys/socket.h>
