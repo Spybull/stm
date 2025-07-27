@@ -235,7 +235,7 @@ del_server(sqlite3 *pdb, const char *sql, const char *name, libstm_error_t *err)
         sqlite3_finalize(stmt);
         return stm_make_error(err, 0, "failed to bind parameter: `%s`", sqlite3_errmsg(pdb));
     }
-    
+
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE)
         return stm_make_error(err, 0, "failed to step: `%s`", sqlite3_errmsg(pdb));
@@ -307,6 +307,32 @@ libstm_db_server_get(sqlite3 *pdb, const char *name, libstm_error_t *err)
     }
 
     return srv;
+}
+
+int
+libstm_db_server_exists(sqlite3 *pdb, const char *name, libstm_error_t *err)
+{
+    int rc = 0;
+    sqlite3_stmt *stmt;
+    
+    rc = sqlite3_prepare_v2(pdb, CHECK_SERVER_NAME_EXISTS, -1, &stmt, 0);
+    if (stm_unlikely(rc != SQLITE_OK))
+        return stm_make_error(err, 0, "failed to prepare statement: `%s`", sqlite3_errmsg(pdb));
+    
+    rc = sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+    if (stm_unlikely(rc != SQLITE_OK)) {
+        sqlite3_finalize(stmt);
+        return stm_make_error(err, 0, "failed to bind parameter: `%s`", sqlite3_errmsg(pdb));
+    }
+
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW)
+        return 1;
+    else if (rc == SQLITE_DONE)
+        return 0; /* not found */
+
+    sqlite3_finalize(stmt);
+    return stm_make_error(err, 0, "failed to check record: `%s`", sqlite3_errmsg(pdb));
 }
 
 void

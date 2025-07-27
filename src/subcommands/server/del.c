@@ -35,14 +35,30 @@ stm_server_subcmd_del(stm_glob_args *glob_args, int argc, char **argv, libstm_er
     if (!glob_args->pdb)
         return STM_GENERIC_ERROR;
 
+    if (libstm_db_server_exists(glob_args->pdb, argv[farg], err) == 0) {
+        fprintf(stdout, "server account `%s` does not exists\n", argv[farg]);
+        return 0;
+    }
+
     glob_args->mpdb = libstm_db_open(STM_DATABASE_META, NULL, err);
     if (stm_unlikely(glob_args->mpdb == NULL))
         return STM_GENERIC_ERROR;
 
-    rc = libstm_db_server_del(glob_args->pdb, argv[farg], err);
-    if (rc < 0)
-        return STM_GENERIC_ERROR;
-    
-    libstm_db_server_del(glob_args->mpdb, argv[farg], err);
+    char answ = 0;
+sss:
+    fprintf(stdout, "server account `%s` will be removed (y/n): ", argv[farg]);
+    answ = fgetc(stdin);
+    while(answ == '\n')
+        answ = fgetc(stdin);
+
+    if (answ == 'n')
+        return 0;
+    else if(answ == 'y') {
+        rc = libstm_db_server_del(glob_args->pdb, argv[farg], err);
+        if (rc < 0)
+            return STM_GENERIC_ERROR;
+    } else
+        goto sss;
+
     return 0;
 }

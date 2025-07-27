@@ -64,6 +64,7 @@ endif()
 target_sources(stm PRIVATE ${SRCS} ${SERVER_SUBCMD_SRC} ${CREDS_SUBCMD_SRC})
 target_link_libraries(stm PRIVATE stmlib argp)
 
-install(TARGETS stm
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+install(TARGETS stm RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(APPLE)
+    set_target_properties(stmlib PROPERTIES INSTALL_NAME_DIR "@rpath")
+endif()

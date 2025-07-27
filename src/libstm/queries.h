@@ -23,6 +23,10 @@ const char DELETE_SERVER_META[] =
 
 STM_HIDDEN
 const char SELECT_ALL_WHERE_NAME_XXX[] =
-    "SELECT * FROM SERVERS WHERE name = '%s';";
+    "SELECT name, ip, port, proto, login, creds, description FROM SERVERS WHERE name = '%s';";
+
+STM_HIDDEN
+const char CHECK_SERVER_NAME_EXISTS[] = 
+    "SELECT 1 FROM SERVERS WHERE name = ?";
 
 #endif

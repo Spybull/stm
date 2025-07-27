@@ -42,3 +42,6 @@ target_link_libraries(stmlib
         ${LIBSSH_LIBRARIES}
         ${LIBZSTD_LIBRARIES}
         OpenSSL::Crypto)
+
+install(TARGETS stmlib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+set_target_properties(stm PROPERTIES INSTALL_RPATH "@loader_path/../lib")
