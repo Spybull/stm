@@ -28,6 +28,8 @@ set(SRCS
     src/init.c
     src/creds.c
     src/server.c
+    src/dump.c
+    src/load.c
     src/stm.c
 )
 
@@ -48,6 +50,10 @@ set(SERVER_SUBCMD_SRC
 )
 
 if(APPLE)
+    target_link_directories(stm PRIVATE /opt/homebrew/lib)
+    target_include_directories(stm PRIVATE /opt/homebrew/include)
+    target_link_libraries(stm PRIVATE csv)
+    
     find_path(ARGP_INCLUDE_DIR argp.h HINTS /opt/homebrew/include /usr/local/include)
     find_library(ARGP_LIB argp HINTS /opt/homebrew/lib /usr/local/lib)
 
@@ -58,6 +64,8 @@ if(APPLE)
     else()
         message(FATAL_ERROR "argp-standalone not found, please install via brew")
     endif()
+
+    target_link_libraries(stm PRIVATE csv)
 endif()
 
 

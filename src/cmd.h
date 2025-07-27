@@ -13,6 +13,7 @@ struct stm_global_arguments {
 
     char *stmd_creds_pid_path,
          *stmd_creds_sock_path;
+    char *call_path;
 };
 typedef struct stm_global_arguments stm_glob_args;
 

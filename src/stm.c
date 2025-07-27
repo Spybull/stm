@@ -16,6 +16,8 @@
 #include "init.h"
 #include "creds.h"
 #include "server.h"
+#include "dump.h"
+#include "load.h"
 
 const char *argp_program_bug_address = "https://github.com/Spybull/stm/issues";
 static stm_glob_args arguments;
@@ -23,13 +25,17 @@ static stm_glob_args arguments;
 enum { 
     CMD_INIT = 1001,
     CMD_CREDS,
-    CMD_SERVER
+    CMD_SERVER,
+    CMD_DUMP,
+    CMD_LOAD
 };
 static struct argp_option options[] = {{ 0 }};
 struct commands_s cmds[] = {
     { CMD_INIT,   "init",   stm_command_init   },
     { CMD_CREDS,  "creds",  stm_command_creds  },
     { CMD_SERVER, "server", stm_command_server },
+    { CMD_DUMP,   "dump",   stm_command_dump   },
+    { CMD_LOAD,   "load",   stm_command_load   },
     { 0, }
 };
 
@@ -51,7 +57,9 @@ static char args_doc[] = "COMMAND [OPTION...]";
 static char doc[] = "\nCOMMANDS:\n"
                     "\tinit   - initialize database\n"
                     "\tcreds  - credential manager\n"
-                    "\tserver - manage servers\n";
+                    "\tserver - manage servers\n"
+                    "\tdump   - dump database\n"
+                    "\tload   - load data to database\n";
 
 static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
@@ -95,6 +103,7 @@ int main(int argc, char **argv)
     if (stm_unlikely(rc < 0))
         goto exit_fail;
 
+    arguments.call_path = getcwd(NULL, 0);
     if (chdir(stm_workdir) < 0)
         libstm_fail_with_error(errno, "failed to change directory `%s` ", stm_workdir);
 
@@ -114,6 +123,8 @@ int main(int argc, char **argv)
         sqlite3_close_v2(arguments.pdb);
     if (arguments.mpdb)
         sqlite3_close_v2(arguments.mpdb);
+    if (arguments.call_path)
+        free(arguments.call_path);
 
 exit_fail:
     if (rc < 0 && err)

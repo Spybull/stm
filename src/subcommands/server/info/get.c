@@ -52,7 +52,7 @@ stm_server_info_get(stm_glob_args *glob_args, int argc, char **argv, libstm_erro
     if (srv == NULL)
         return STM_GENERIC_ERROR;
 
-    ssh_session session = libstm_ssh_connect_once(srv->ip, srv->login, srv->creds, err);
+    ssh_session session = libstm_ssh_connect_once(srv->addr, srv->login, srv->creds, err);
     if (session == NULL)
         return -1;
 

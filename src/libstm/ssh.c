@@ -230,7 +230,7 @@ new_ssh_session(ssh_session session, libstm_server *srv, libstm_error_t *err)
     int rc = 0;
 
     ssh_options_set(session, SSH_OPTIONS_USER, srv->login);
-    ssh_options_set(session, SSH_OPTIONS_HOST, srv->ip);
+    ssh_options_set(session, SSH_OPTIONS_HOST, srv->addr);
     ssh_options_set(session, SSH_OPTIONS_PORT, &srv->port);
     ssh_options_parse_config(session, NULL); // use ~/.ssh/config
 

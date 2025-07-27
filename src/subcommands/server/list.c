@@ -2,6 +2,7 @@
 #include <argp.h>
 
 #include "libstm/db.h"
+#include "libstm/queries.h"
 #include "libstm/sec.h"
 #include "libstm/config.h"
 #include "libstm/utils.h"
@@ -56,9 +57,9 @@ stm_server_subcmd_list(stm_glob_args *glob_args, int argc, char **argv, libstm_e
         return STM_GENERIC_ERROR;
     
     if (CHECK_FLAGS(flags, FORMAT_CSV))
-        rc = stmlib_fmt_print_csv(glob_args->pdb, "SELECT * FROM SERVERS;", !CHECK_FLAGS(flags, NOHEADERS), err);
+        rc = libstm_fmt_print_csv(glob_args->pdb, SELECT_ALL_FROM_SERVERS, !CHECK_FLAGS(flags, NOHEADERS), err);
     else
-        rc = stmlib_fmt_print_json(glob_args->pdb, "SELECT * FROM SERVERS;", err);
+        rc = libstm_fmt_print_json(glob_args->pdb, SELECT_ALL_FROM_SERVERS, err);
 
     return rc;
 }

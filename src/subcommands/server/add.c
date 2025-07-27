@@ -11,9 +11,9 @@
 
 static bool interactive = false;
 enum {
-    SERVER_IPADDR = 'i',
+    SERVER_ADDR  = 'a',
     SERVER_CREDS = 'c',
-    SERVER_PORT = 'p',
+    SERVER_PORT  = 'p',
     SERVER_PROTO = 'k',
     SERVER_LOGIN = 'l',
     SERVER_DESCRIPTION = 'd',
@@ -21,11 +21,11 @@ enum {
 };
 
 static struct argp_option options[] = {
-    { "ip",            SERVER_IPADDR,      "STRING", 0, "IPv4/IPv6 address",             0},
+    { "address",       SERVER_ADDR,        "STRING", 0, "IP/HTTP addresses",             0},
     { "port",          SERVER_PORT,        "NUMBER", 0, "TCP port number (default: 22)", 0},
     { "creds",         SERVER_CREDS,       "STRING", 0, "Credentials",                   0},
     { "protocol",      SERVER_PROTO,       "STRING", 0, "Protocol (default: tcp)",       0},
-    { "login",         SERVER_LOGIN,       "STRING", 0, "Login",                         0},
+    { "login",         SERVER_LOGIN,       "STRING", 0, "Login (default: root)",         0},
     { "description",   SERVER_DESCRIPTION, "STRING", 0, "Description",                   0},
     { "interactive",   INTERACTIVE_INPUT,   0,       0, "Enter creds interactively",     0},
     { 0, }
@@ -38,8 +38,8 @@ parse_opt(int key, char *arg, struct argp_state *state) {
 
     switch (key)
     {
-        case SERVER_IPADDR:
-            args->ip = arg;
+        case SERVER_ADDR:
+            args->addr = arg;
         break;
 
         case SERVER_PORT:
@@ -96,8 +96,8 @@ stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv
 
     argp_parse(&argp, argc, argv, 0, 0, &server);
 
-    if (!server.ip)
-        return stm_make_error(err, 0, "ip address is required");
+    if (!server.addr)
+        return stm_make_error(err, 0, "address is required");
 
     if (interactive && !server.creds) {
         server.creds = libstm_ask_password("Enter server credentials: ", 0, err);

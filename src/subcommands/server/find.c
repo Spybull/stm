@@ -48,7 +48,7 @@ stm_server_subcmd_find(stm_glob_args *glob_args, int argc, char **argv, libstm_e
     if (srv == NULL)
         return STM_GENERIC_ERROR;
 
-    rc = stmlib_fmt_print_srv_as_json(srv, err);
+    rc = libstm_fmt_print_srv_as_json(srv, err);
     if (rc < 0)
         return STM_GENERIC_ERROR;
 

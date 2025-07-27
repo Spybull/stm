@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <jansson.h>
+
 #include "utils.h"
+#include "queries.h"
 
 static json_t *
 json_string_or_json_null(const char *val)
@@ -12,11 +14,11 @@ json_string_or_json_null(const char *val)
 
 
 int
-stmlib_fmt_print_srv_as_json(libstm_server *srv, libstm_error_t *err)
+libstm_fmt_print_srv_as_json(libstm_server *srv, libstm_error_t *err)
 {
     json_t *row = json_object();
     json_object_set_new(row, "name", json_string_or_json_null(srv->name));
-    json_object_set_new(row, "ip", json_string_or_json_null(srv->ip));
+    json_object_set_new(row, "ip", json_string_or_json_null(srv->addr));
     json_object_set_new(row, "port", json_integer(srv->port));
     json_object_set_new(row, "proto", json_string_or_json_null(srv->proto));
     json_object_set_new(row, "login", json_string_or_json_null(srv->login));
@@ -35,7 +37,7 @@ stmlib_fmt_print_srv_as_json(libstm_server *srv, libstm_error_t *err)
 }
 
 int
-stmlib_fmt_print_json(sqlite3 *pdb, const char *query, libstm_error_t *err)
+libstm_fmt_print_json(sqlite3 *pdb, const char *query, libstm_error_t *err)
 {
     int rc = 0;
     sqlite3_stmt *stmt;
@@ -87,7 +89,7 @@ stmlib_fmt_print_json(sqlite3 *pdb, const char *query, libstm_error_t *err)
 }
 
 int
-stmlib_fmt_print_csv(sqlite3 *pdb, const char *query, bool with_header, libstm_error_t *err)
+libstm_fmt_print_csv(sqlite3 *pdb, const char *query, bool with_header, libstm_error_t *err)
 {
     int rc = 0;
     sqlite3_stmt *stmt;
@@ -133,4 +135,8 @@ stmlib_fmt_print_csv(sqlite3 *pdb, const char *query, bool with_header, libstm_e
 
     sqlite3_finalize(stmt);
     return 0;
+}
+
+int libstm_fmt_dump_as_csv(sqlite3 *pdb, libstm_error_t *err) {
+    return libstm_fmt_print_csv(pdb, SELECT_ALL_FROM_SERVERS, false, err);
 }

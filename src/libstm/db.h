@@ -11,14 +11,14 @@ typedef int (*sqlite_cb)(void *, int, char *[], char *[]);
 CREATE TABLE [SERVERS] (                                                 	 \
 	id          INTEGER PRIMARY KEY,                                     	 \
 	name        TEXT NOT NULL CHECK (name != '') UNIQUE,                 	 \
-	ip          TEXT NOT NULL,                                           	 \
+	address     TEXT NOT NULL,                                           	 \
 	port        INTEGER DEFAULT 22 CHECK (port >= 0 AND port <= 65535),  	 \
 	proto       TEXT DEFAULT 'TCP',                                      	 \
 	login       TEXT,                                                    	 \
 	creds       TEXT,                                                    	 \
 	description TEXT,                                                    	 \
 	created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,                      	 \
-	UNIQUE(ip, port, login, name));                                      	 \
+	UNIQUE(address, port, login, name));                                     \
 																		 	 \
 CREATE TABLE [SNAPSHOTS] (												 	 \
 	id 		   INTEGER PRIMARY KEY,										 	 \
@@ -45,7 +45,7 @@ CREATE TABLE [SERVERS_META] (						\
 enum
 {
 	NAME  = 0x2f8b3bf4,
-	IP    = 0x687720b2,
+	ADDRESS = 0xe21e09cf,
 	PORT  = 0x5fe28198,
 	PROTO = 0x35b2a389,
 	LOGIN = 0x45a1edc,
@@ -55,7 +55,7 @@ enum
 
 struct libstm_server_s {
 	char *name;
-	char *ip;
+	char *addr;
 	unsigned short port;
 	char *proto;
 	char *login;

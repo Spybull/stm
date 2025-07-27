@@ -5,7 +5,6 @@
 #include "queries.h"
 #include "compress.h"
 
-
 static int
 make_dummy_query(sqlite3 *pdb, libstm_error_t *err) {
     
@@ -163,7 +162,7 @@ add_server(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *er
         return stm_make_error(err, sqlite3_errcode(pdb), "failed to prepare: %s", sqlite3_errmsg(pdb));
     
     bind_text_by_str(stmt, srv->name,        ":name",        true);
-    bind_text_by_str(stmt, srv->ip,          ":ip",          true);
+    bind_text_by_str(stmt, srv->addr,        ":address",     true);
     bind_text_by_str(stmt, srv->proto,       ":proto",       true);
     bind_text_by_str(stmt, srv->login,       ":login",       true);
     bind_text_by_str(stmt, srv->creds,       ":creds",       true);
@@ -272,7 +271,7 @@ server_get_cb(void *param, int argc, char **argv, char **colname)
                 if (argv[i] != NULL)
                     srv->name = xstrdup(argv[i]);
             break;
-            case IP:          srv->ip          = !argv[i] ? NULL : xstrdup(argv[i]); break;
+            case ADDRESS:     srv->addr        = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case PORT:        srv->port        = atoi(argv[i]);                      break;
             case PROTO:       srv->proto       = !argv[i] ? NULL : xstrdup(argv[i]); break;
             case LOGIN:       srv->login       = !argv[i] ? NULL : xstrdup(argv[i]); break;
@@ -342,8 +341,8 @@ libstm_server_free(libstm_server *srv)
         free(srv->name);
     if (srv->login)
         free(srv->login);
-    if (srv->ip)
-        free(srv->ip);
+    if (srv->addr)
+        free(srv->addr);
     if (srv->proto)
         free(srv->proto);
 
@@ -421,5 +420,20 @@ libstm_setup_server_info(sqlite3 *pdb, const char *name, const char *entry_name,
     return 0;
 }
 
-
-// int libstm_get_server_info
+/* q */
+const char ADD_SERVER[] =
+    "INSERT INTO SERVERS (name, address, port, proto, login, creds, description) VALUES "
+    "(:name, :address, :port, :proto, :login, :creds, :description);";
+const char ADD_SERVER_META[] =
+    "INSERT INTO SERVERS_META (name) VALUES (:name);";
+const char DELETE_SERVER[] = 
+    "DELETE FROM SERVERS WHERE name = ?;";
+const char DELETE_SERVER_META[] =
+    "DELETE FROM SERVER_META WHERE name = ?;";
+const char SELECT_ALL_WHERE_NAME_XXX[] =
+    "SELECT name, address, port, proto, login, creds, description FROM SERVERS WHERE name = '%s';";
+const char SELECT_ALL_FROM_SERVERS[] =
+    "SELECT name, ip, port, proto, login, creds, description FROM SERVERS";
+const char CHECK_SERVER_NAME_EXISTS[] = 
+    "SELECT 1 FROM SERVERS WHERE name = ?";
+/* q */
