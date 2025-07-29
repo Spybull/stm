@@ -8,11 +8,25 @@ set(STM_VERSION_MINOR 0)
 set(STM_VERSION_PATCH 0)
 set(STM_VERSION_STRING "${STM_VERSION_MAJOR}.${STM_VERSION_MINOR}.${STM_VERSION_PATCH}")
 
+option(STATIC_LINK "Link stm statically" OFF)
+
+
 add_executable(stm)
 target_compile_options(stm PRIVATE -Wall -Wextra -Werror)
 target_compile_options(stm PRIVATE $<$<CONFIG:Debug>:-g -O0>)
 target_compile_options(stm PRIVATE $<$<CONFIG:Release>:-O3>)
 add_definitions(-D_GNU_SOURCE -D_XOPEN_SOURCE)
+
+# if(STATIC_LINK)
+#     message(STATUS "Static linking enabled")
+#     set(BUILD_SHARED_LIBS OFF)
+#     if(UNIX AND NOT APPLE)
+#         target_link_options(stm PRIVATE -static)
+#     endif()
+# else()
+#     message(STATUS "Dynamic linking (default)")
+# endif()
+
 
 target_include_directories(stm PRIVATE ${CMAKE_SOURCE_DIR}/src)
 

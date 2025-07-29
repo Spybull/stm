@@ -63,7 +63,11 @@ stm_server_subcmd_list(stm_glob_args *glob_args, int argc, char **argv, libstm_e
         return STM_GENERIC_ERROR;
     
     char query[BUFSIZ] = {0};
-    snprintf(query, BUFSIZ, SELECT_ALL_SERVERS_BY_GROUP, !group ? "main" : group);
+
+    if (!group)
+        snprintf(query, sizeof(query), "%s", SELECT_ALL_FROM_SERVERS);
+    else
+        snprintf(query, BUFSIZ, SELECT_ALL_SERVERS_BY_GROUP, group);
 
     if (CHECK_FLAGS(flags, FORMAT_CSV)) {
         rc = libstm_fmt_print_csv(glob_args->pdb, query, !CHECK_FLAGS(flags, NOHEADERS), err);

@@ -167,7 +167,7 @@ add_server(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *er
     bind_text_by_str(stmt, srv->login,       ":login",       true);
     bind_text_by_str(stmt, srv->creds,       ":creds",       true);
     bind_text_by_str(stmt, srv->description, ":description", true);
-    bind_text_by_str(stmt, srv->group,       ":group",       true);
+    bind_text_by_str(stmt, srv->group,       ":grp",       true);
     bind_int_by_str(stmt,  srv->port,        ":port");
     
     rc = sqlite3_step(stmt);
@@ -434,9 +434,9 @@ const char DELETE_SERVER_META[] =
 const char SELECT_ALL_WHERE_NAME_XXX[] =
     "SELECT name, address, port, proto, login, creds, description, grp FROM SERVERS WHERE name = '%s';";
 const char SELECT_ALL_FROM_SERVERS[] =
-    "SELECT name, ip, port, proto, login, creds, description, grp FROM SERVERS";
+    "SELECT name, address, port, proto, login, creds, description, grp FROM SERVERS";
 const char SELECT_ALL_SERVERS_BY_GROUP[] = 
-    "SELECT name, ip, port, proto, login, creds, description, grp FROM SERVERS WHERE grp = '%s';";
+    "SELECT name, address, port, proto, login, creds, description, grp FROM SERVERS WHERE grp = '%s';";
 const char CHECK_SERVER_NAME_EXISTS[] = 
     "SELECT 1 FROM SERVERS WHERE name = ?";
 /* q */

@@ -17,6 +17,7 @@ find_package(OpenSSL REQUIRED)
 
 add_library(stmlib ${SRCS})
 
+
 target_include_directories(stmlib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -44,4 +45,6 @@ target_link_libraries(stmlib
         OpenSSL::Crypto)
 
 install(TARGETS stmlib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-set_target_properties(stm PROPERTIES INSTALL_RPATH "@loader_path/../lib")
+if (APPLE)
+    set_target_properties(stm PROPERTIES INSTALL_RPATH "@loader_path/../lib")
+endif()

@@ -17,7 +17,7 @@ CREATE TABLE [SERVERS] (                                                 	 \
 	login       TEXT,                                                    	 \
 	creds       TEXT,                                                    	 \
 	description TEXT,                                                    	 \
-	group		TEXT DEFAULT 'main',										 \
+	grp			TEXT DEFAULT 'main',										 \
 	created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,                      	 \
 	UNIQUE(address, port, login, name));                                     \
 																		 	 \
