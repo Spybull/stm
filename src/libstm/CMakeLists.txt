@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30.8)
+cmake_minimum_required(VERSION 3.0)
 project(libstm C)
 
 set(CMAKE_C_STANDARD 23)
