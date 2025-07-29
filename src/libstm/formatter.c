@@ -44,7 +44,7 @@ libstm_fmt_print_json(sqlite3 *pdb, const char *query, libstm_error_t *err)
 
     rc = sqlite3_prepare_v2(pdb, query, -1, &stmt, NULL);
     if (stm_unlikely(rc != SQLITE_OK))
-        return stm_make_error(err, errno, "failed to prepare sql query: %s", sqlite3_errmsg(pdb));
+        return stm_make_error(err, errno, "failed to prepare sql query: %s ", sqlite3_errmsg(pdb));
 
     int cols = sqlite3_column_count(stmt);
     json_t *jarr = json_array();

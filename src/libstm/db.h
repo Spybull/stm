@@ -17,6 +17,7 @@ CREATE TABLE [SERVERS] (                                                 	 \
 	login       TEXT,                                                    	 \
 	creds       TEXT,                                                    	 \
 	description TEXT,                                                    	 \
+	group		TEXT DEFAULT 'main',										 \
 	created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,                      	 \
 	UNIQUE(address, port, login, name));                                     \
 																		 	 \
@@ -61,6 +62,7 @@ struct libstm_server_s {
 	char *login;
 	char *creds;
 	char *description;
+	char *group;
 };
 typedef struct libstm_server_s libstm_server;
 

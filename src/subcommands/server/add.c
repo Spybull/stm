@@ -17,6 +17,7 @@ enum {
     SERVER_PROTO = 'k',
     SERVER_LOGIN = 'l',
     SERVER_DESCRIPTION = 'd',
+    SERVER_GROUP = 'g',
     INTERACTIVE_INPUT = 1001
 };
 
@@ -28,6 +29,7 @@ static struct argp_option options[] = {
     { "login",         SERVER_LOGIN,       "STRING", 0, "Login (default: root)",         0},
     { "description",   SERVER_DESCRIPTION, "STRING", 0, "Description",                   0},
     { "interactive",   INTERACTIVE_INPUT,   0,       0, "Enter creds interactively",     0},
+    { "group",         SERVER_GROUP,       "STRING", 0, "Server group name",             0},
     { 0, }
 };
 
@@ -66,6 +68,10 @@ parse_opt(int key, char *arg, struct argp_state *state) {
             args->description = arg;
         break;
 
+        case SERVER_GROUP:
+            args->group = arg;
+        break;
+
         case ARGP_KEY_ARG:
             if (state->arg_num == 0)
                 args->name = arg;
@@ -91,7 +97,8 @@ stm_server_subcmd_add(stm_glob_args *glob_args stm_unused, int argc, char **argv
     libstm_server server = {
         .port = 22,
         .proto = "tcp",
-        .login = "root"
+        .login = "root",
+        .group = "main"
     };
 
     argp_parse(&argp, argc, argv, 0, 0, &server);

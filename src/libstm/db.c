@@ -167,6 +167,7 @@ add_server(sqlite3 *pdb, const char *sql, libstm_server *srv, libstm_error_t *er
     bind_text_by_str(stmt, srv->login,       ":login",       true);
     bind_text_by_str(stmt, srv->creds,       ":creds",       true);
     bind_text_by_str(stmt, srv->description, ":description", true);
+    bind_text_by_str(stmt, srv->group,       ":group",       true);
     bind_int_by_str(stmt,  srv->port,        ":port");
     
     rc = sqlite3_step(stmt);
@@ -422,8 +423,8 @@ libstm_setup_server_info(sqlite3 *pdb, const char *name, const char *entry_name,
 
 /* q */
 const char ADD_SERVER[] =
-    "INSERT INTO SERVERS (name, address, port, proto, login, creds, description) VALUES "
-    "(:name, :address, :port, :proto, :login, :creds, :description);";
+    "INSERT INTO SERVERS (name, address, port, proto, login, creds, description, grp) VALUES "
+    "(:name, :address, :port, :proto, :login, :creds, :description, :grp);";
 const char ADD_SERVER_META[] =
     "INSERT INTO SERVERS_META (name) VALUES (:name);";
 const char DELETE_SERVER[] = 
@@ -431,9 +432,11 @@ const char DELETE_SERVER[] =
 const char DELETE_SERVER_META[] =
     "DELETE FROM SERVER_META WHERE name = ?;";
 const char SELECT_ALL_WHERE_NAME_XXX[] =
-    "SELECT name, address, port, proto, login, creds, description FROM SERVERS WHERE name = '%s';";
+    "SELECT name, address, port, proto, login, creds, description, grp FROM SERVERS WHERE name = '%s';";
 const char SELECT_ALL_FROM_SERVERS[] =
-    "SELECT name, ip, port, proto, login, creds, description FROM SERVERS";
+    "SELECT name, ip, port, proto, login, creds, description, grp FROM SERVERS";
+const char SELECT_ALL_SERVERS_BY_GROUP[] = 
+    "SELECT name, ip, port, proto, login, creds, description, grp FROM SERVERS WHERE grp = '%s';";
 const char CHECK_SERVER_NAME_EXISTS[] = 
     "SELECT 1 FROM SERVERS WHERE name = ?";
 /* q */
